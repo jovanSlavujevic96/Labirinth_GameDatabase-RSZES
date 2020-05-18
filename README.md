@@ -1,1 +1,1 @@
-# Labirinth_GameDatabase-RSZES
+# MazeGame_Database-RSZES
