@@ -4,6 +4,9 @@
 
 #include "keyboard.hpp"
 #include "sql.hpp"
+#include "server.hpp"
+
+#include <vector>
 
 int main(int argc, char **argv)
 {
@@ -20,7 +23,10 @@ int main(int argc, char **argv)
         sql = std::make_unique<SQL>(username.c_str(), password.c_str() );
     }
 
-    sql->print_leaderboard();    
+    std::unique_ptr<Server> server = std::make_unique<Server>(sql);
+    server->ClientCommunication();
+    
+    //sql->print_leaderboard();    
 
     return 0;
 }

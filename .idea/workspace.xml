@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c5fca032-56ba-4f5d-9bb6-b1cd07d99b2f" name="Default Changelist" comment="" />
+    <list default="true" id="c5fca032-56ba-4f5d-9bb6-b1cd07d99b2f" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/MazeGame/app/src/main/java/com/example/mazegame/SignUpActivity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MazeGame/app/src/main/res/layout/activity_sign_up.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MazeGame/app/src/main/res/values/dimens.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/src/main/java/com/example/mazegame/GameView.java" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/src/main/java/com/example/mazegame/GameView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/src/main/java/com/example/mazegame/MainMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/src/main/java/com/example/mazegame/MainMenu.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/src/main/res/layout/activity_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/src/main/res/layout/activity_main.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/src/main/res/layout/activity_main_menu.xml" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/src/main/res/layout/activity_main_menu.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MazeGame/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/MazeGame/app/src/main/res/values/strings.xml" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,6 +23,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1c5d19LwAHHiDpAX03KA8NnO9MS" />
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/MazeGame" />
+  </component>
   <component name="RunDashboard">
     <option name="ruleStates">
       <list>
@@ -42,7 +56,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>

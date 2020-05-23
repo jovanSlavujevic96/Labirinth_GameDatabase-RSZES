@@ -13,6 +13,7 @@ public:
     explicit SQL(const char* username, const char* password);
     virtual ~SQL();
 
+    bool sign_in(player_s* player);
     bool insert_new_player(const player_s* player);
     bool change_players_name(player_s* player, const char* newName);
     bool change_players_password(player_s* player, const char* newPassword);

@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string.h>
 
-typedef enum {error, Free, reserved} checkRow_st;
+typedef enum {Error, Free, Reserved} checkRow_st;
 
 class SQL::SQL_impl
 {
@@ -17,7 +17,7 @@ public:
     SQL_impl(const char* username, const char* password);
     virtual ~SQL_impl() = default;
 
-    checkRow_st check_existance(const char* nickname);
+    checkRow_st check_existance(const char* data, const char* typeOfData);
     bool insert_new_player(const player_s* player);
     bool change_players_name(player_s* player, const char* newName);
     bool change_players_password(player_s* player, const char* newPassword);
@@ -44,26 +44,33 @@ SQL::SQL_impl::SQL_impl(const char* username, const char* password)
     std::cout << "\nConnection has succeed\n";
 }
 
-checkRow_st SQL::SQL_impl::check_existance(const char* nickname)
+checkRow_st SQL::SQL_impl::check_existance(const char* data, const char* typeOfData)
 {
+    if(strcmp(typeOfData,"nickname") && strcmp(typeOfData,"email") )
+    {
+        return Error;
+    }
     MYSQL_RES* res;
-    int qstate = mysql_query(m_connector, "SELECT nickname FROM players ");
+    std::string message = "SELECT " + std::string(typeOfData) + " FROM players";
+    int qstate = mysql_query(m_connector, message.c_str() );
     if(qstate)
     {
         std::cout << "\nSelection request has been failed\n";
-        return error;
+        return Error;
     }
     res = mysql_store_result(m_connector);
     if(NULL == res) 
     {
         std::cout << "\nStoring request has been failed\n";
-        return error;
+        return Error;
     }
     MYSQL_ROW row = mysql_fetch_row(res);
     while(row)
     {
-        if(!strcmp(row[0],nickname) )
-            return reserved;    
+        if(!strcmp(row[0], data) )
+        {
+            return Reserved;    
+        }
         row = mysql_fetch_row(res);
     }
     return Free;    
@@ -73,8 +80,8 @@ bool SQL::SQL_impl::insert_new_player(const player_s* player)
 {
     int qstate;
     std::stringstream ss;
-    ss << "INSERT INTO players(nickname, password, points, level) VALUES('" << \
-        player->getNickname() << "','" << player->getPassword() << "',0,0)";
+    ss << "INSERT INTO players(email, nickname, password, points, level) VALUES('" << \
+        player->getEmail() << "','" <<  player->getNickname() << "','" << player->getPassword() << "',0,0)";
     const auto query_st = ss.str(); //ss.str(""); ss.clear();
     auto* query = query_st.c_str();
     qstate = mysql_query(m_connector, query);
@@ -92,7 +99,7 @@ bool SQL::SQL_impl::change_players_name(player_s* player, const char* newName)
 {
     const std::string oldName = player->getNickname();
     std::stringstream ss;
-    ss << "UPDATE players set nickname = '" << newName << "' where nickname = '" << player->getNickname() << "'";
+    ss << "UPDATE players set nickname = '" << newName << "' where email = '" << player->getEmail() << "'";
     const auto query_st = ss.str(); //ss.str(""); ss.clear();
     auto* query = query_st.c_str();
     int qstate = mysql_query(m_connector, query);
@@ -109,7 +116,7 @@ bool SQL::SQL_impl::change_players_name(player_s* player, const char* newName)
 bool SQL::SQL_impl::change_players_password(player_s* player, const char* newPassword)
 {
     std::stringstream ss;
-    ss << "UPDATE players set password = '" << newPassword << "' where nickname = '" << player->getNickname() << "'";
+    ss << "UPDATE players set password = '" << newPassword << "' where email = '" << player->getEmail() << "'";
     const auto query_st = ss.str(); //ss.str(""); ss.clear();
     auto* query = query_st.c_str();
     int qstate = mysql_query(m_connector, query);
@@ -172,16 +179,42 @@ SQL::SQL(const char* username, const char* password) :
 
 SQL::~SQL() = default;
 
+bool SQL::sign_in(player_s* player)
+{
+    if(!player)
+        return false;
+
+    auto check = SQL_pimpl->check_existance(player->getNickname(), "nickname" );
+    if(check == Error || check == Free)
+    {
+        std::cout << "\nPlayer with nickname: " << player->getNickname() << " does not exist!\n";
+        return false;
+    }
+    check = SQL_pimpl->check_existance(player->getEmail(), "email" );
+    if(check == Error || check == Free)
+    {
+        std::cout << "\nPlayer with email: " << player->getEmail() << " does not exist!\n";
+        return false;
+    }
+    return true;
+}
+
 bool SQL::insert_new_player(const player_s* player)
 {
     if(!player)
         return false;
 
     //check does it exist allready
-    const auto check = SQL_pimpl->check_existance(player->getNickname() );
-    if(check == error || check == reserved)
+    auto check = SQL_pimpl->check_existance(player->getNickname(), "nickname" );
+    if(check == Error || check == Reserved)
     {
         std::cout << "\nPlayer with nickname: " << player->getNickname() << " already exist!\n";
+        return false;
+    }
+    check = SQL_pimpl->check_existance(player->getEmail(), "email" );
+    if(check == Error || check == Reserved)
+    {
+        std::cout << "\nPlayer with email: " << player->getEmail() << " already exist!\n";
         return false;
     }
     return SQL_pimpl->insert_new_player(player);
@@ -193,14 +226,20 @@ bool SQL::change_players_name(player_s* player, const char* newName)
         return false;
 
     //check does it exist allready
-    auto check = SQL_pimpl->check_existance(player->getNickname() );
-    if(error == check || Free == check)
+    auto check = SQL_pimpl->check_existance(player->getNickname(), "nickname" );
+    if(Error == check || Free == check)
     {
         std::cout << "\nPlayer with this nickname don't exists!\n";
         return false;
     }
-    check = SQL_pimpl->check_existance(newName);
-    if(error == check || reserved == check)
+    check = SQL_pimpl->check_existance(player->getEmail(), "email" );
+    if(Error == check || Free == check)
+    {
+        std::cout << "\nPlayer with this email don't exists!\n";
+        return false;
+    }
+    check = SQL_pimpl->check_existance(newName, "nickname");
+    if(Error == check || Reserved == check)
     {
         std::cout << "\nSuggested new nickname has already exists!\n";
         return false;
@@ -214,8 +253,8 @@ bool SQL::change_players_password(player_s* player, const char* newPassword)
         return false;
 
     //check does it exist already
-    const auto check = SQL_pimpl->check_existance(player->getNickname() );
-    if(error == check || Free == check)
+    const auto check = SQL_pimpl->check_existance(player->getNickname(), "nickname" );
+    if(Error == check || Free == check)
     {
         std::cout << "\nPlayer with this nickname don't exists!\n";
         return false;
@@ -236,8 +275,8 @@ bool SQL::change_players_score(player_s* player, const uint16_t points, const ui
         return false;
 
     //check does it exist already
-    const auto check = SQL_pimpl->check_existance(player->getNickname() );
-    if(error == check || Free == check)
+    const auto check = SQL_pimpl->check_existance(player->getNickname(), "nickname" );
+    if(Error == check || Free == check)
     {
         std::cout << "\nPlayer with this nickname don't exists!\n";
         return false;

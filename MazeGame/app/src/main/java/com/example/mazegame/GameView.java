@@ -25,13 +25,14 @@ public class GameView extends View
 
     private Cell[][] cells;
     private Cell player, exit;
+    private boolean nije;
     private static final int COLS = 7, ROWS = 10;
     private static final float WALL_THICKNESS = 4;
     private float cellSize, hMargin, vMargin;
     private Paint wallPaint, playerPaint, exitPaint;
     private Random random;
 
-    public GameView(Context context, @Nullable AttributeSet attrs)
+    public GameView(Context context, @Nullable AttributeSet attrs )
     {
         super(context, attrs);
         wallPaint = new Paint();
@@ -44,9 +45,10 @@ public class GameView extends View
         exitPaint = new Paint();
         exitPaint.setColor(Color.RED);
 
-        random = new Random();
 
-        createMaze();
+        random = new Random();
+//        createMaze(true);
+
     }
 
     private Cell getNeighbour(Cell cell)
@@ -104,7 +106,7 @@ public class GameView extends View
         }
     }
 
-    private void createMaze()
+    public void createMaze(boolean nije)
     {
         Stack<Cell> stack = new Stack<>();
         Cell current, next;
@@ -119,7 +121,9 @@ public class GameView extends View
             }
         }
 
-        player = cells[0][0];
+        if(nije) {
+            player = cells[0][0];
+        }
         exit = cells[COLS-1][ROWS-1];
 
         current = cells[0][0];
@@ -197,14 +201,15 @@ public class GameView extends View
         }
 
         float margin = cellSize/10;
-
-        canvas.drawRect(
-            player.col*cellSize+margin,
-            player.row*cellSize+margin,
-            (player.col+1)*cellSize-margin,
-            (player.row+1)*cellSize-margin,
-            playerPaint
-        );
+        if(player != null) {
+            canvas.drawRect(
+                    player.col * cellSize + margin,
+                    player.row * cellSize + margin,
+                    (player.col + 1) * cellSize - margin,
+                    (player.row + 1) * cellSize - margin,
+                    playerPaint
+            );
+        }
 
         canvas.drawRect(
                 exit.col*cellSize+margin,
@@ -217,37 +222,38 @@ public class GameView extends View
 
     private void movePlayer(Direction direction)
     {
-        switch(direction)
-        {
-            case UP:
-                if(!player.topWall)
-                    player = cells[player.col][player.row-1];
-                break;
+        if(player != null) {
+            switch (direction) {
+                case UP:
+                    if (!player.topWall)
+                        player = cells[player.col][player.row - 1];
+                    break;
 
-            case DOWN:
-                if(!player.bottomWall)
-                    player = cells[player.col][player.row+1];
-                break;
+                case DOWN:
+                    if (!player.bottomWall)
+                        player = cells[player.col][player.row + 1];
+                    break;
 
-            case LEFT:
-                if(!player.leftWall)
-                    player = cells[player.col-1][player.row];
-                break;
+                case LEFT:
+                    if (!player.leftWall)
+                        player = cells[player.col - 1][player.row];
+                    break;
 
-            case RIGHT:
-                if(!player.rightWall)
-                    player = cells[player.col+1][player.row];
-                break;
+                case RIGHT:
+                    if (!player.rightWall)
+                        player = cells[player.col + 1][player.row];
+                    break;
+            }
+
+            checkExit();
+            invalidate();
         }
-
-        checkExit();
-        invalidate();
     }
 
     private void checkExit()
     {
         if(player == exit)
-            createMaze();
+            createMaze(true);
     }
 
     @Override

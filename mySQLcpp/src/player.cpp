@@ -1,18 +1,13 @@
 #include "player.hpp"
 
-player::player()
+player::player(const std::string& email, const std::string& nickname, const std::string& password) :
+    email{email}, nickname{nickname}, password{password}
 {
 
 }
 
-player::player(const std::string& nickname, const std::string& password) :
-    nickname{nickname}, password{password}
-{
-
-}
-
-player::player(const char* nickname, const char* password) :
-    nickname{nickname}, password{password}
+player::player(const char* email, const char* nickname, const char* password) :
+    email{email}, nickname{nickname}, password{password}
 {
 
 }
@@ -65,4 +60,19 @@ void player::setPassedLevel(const uint8_t passed_level)
 uint8_t player::getPassedLevel(void) const
 {
     return this->passed_level;
+}
+
+void player::setSocket(const int64_t socket)
+{
+    this->socket = socket;
+}
+
+int64_t player::getPlayerSocket(void) const
+{
+    return this->socket;
+}
+
+const char* player::getEmail(void) const
+{
+    return this->email.c_str();
 }
