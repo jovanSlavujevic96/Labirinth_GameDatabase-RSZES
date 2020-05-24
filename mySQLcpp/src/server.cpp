@@ -13,6 +13,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <iostream>
+
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
@@ -160,11 +162,11 @@ bool Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& paramet
 
 uint64_t Server::ServerImpl::FindPlayerIndex(const player_s* player)
 {
-    uint64_t index;
-    for(auto&& vecPlayer : players)
+    uint64_t index=0;
+    for(const auto& vecPlayer : players)
     {
-        if(vecPlayer.getNickname() == player->getNickname() && \
-           vecPlayer.getEmail() == player->getEmail() )
+        if( !strcmp(vecPlayer.getNickname(), player->getNickname() ) && \
+            !strcmp(vecPlayer.getEmail(), player->getEmail() ) )
         {
             return index;
         }
@@ -176,9 +178,9 @@ uint64_t Server::ServerImpl::FindPlayerIndex(const player_s* player)
 void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
 {
     char buffer[BUFFER_SIZE] = {0};
-    player_s* player_ptr;
+    player_s * player_ptr;
     bool signed_up = false;
-    uint64_t index, pl_index;
+    uint64_t index, pl_index, FINAL_pl_index;
     
     std::mutex m;
     std::condition_variable cv;
@@ -195,41 +197,69 @@ void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
         {
             auto params = parseString(buffer);
             bool info;
-            if(!strcmp(params[0].c_str(), "SIGNUP" ) && !signed_up )
+
+            player_s tmp_player(params[1], params[2], params[3] );
+            tmp_player.setSocket(socket);
+
+            pl_index = FindPlayerIndex(&tmp_player);
+
+            if(player_ptr && pl_index > players.size() )
             {
-                player_s tmp_player(params[1], params[2], params[3]);
-                tmp_player.setSocket(socket);
-                info = sql->insert_new_player(&tmp_player);
-                if(info)
+                info = false;
+            }
+            else
+            {
+                if(!strcmp(params[0].c_str(), "SIGN_UP" ) && !signed_up )
                 {
-                    players.push_back(tmp_player);
-                    pl_index = FindPlayerIndex(&tmp_player);
-                    if(!(pl_index > players.size() ) )
+                    std::cout << "IM here!\n";
+                    info = sql->insert_new_player(&tmp_player);
+                    if(info)
                     {
+                        players.push_back(tmp_player);
+                        pl_index = FindPlayerIndex(&tmp_player);
                         player_ptr = &players[pl_index];
                         signed_up = true;
+                        FINAL_pl_index = pl_index;
                     }
-                    else
+                }
+                else
+                {
+                    info = (player_ptr == nullptr) ? (Server::ServerImpl::chooseSQLaction(params, &tmp_player, signed_up) ) : \
+                                                     (Server::ServerImpl::chooseSQLaction(params, player_ptr, signed_up) );
+                    if(signed_up && !player_ptr)
                     {
-                        goto exit;
+                        pl_index = FindPlayerIndex(&tmp_player);
+                        if(pl_index > players.size() )
+                        {
+                            players.push_back(tmp_player);
+                            pl_index = FindPlayerIndex(&tmp_player);
+                            player_ptr = &players[pl_index];
+                            FINAL_pl_index = pl_index;
+                        }
                     }
                 }
             }
-            else
-                info = Server::ServerImpl::chooseSQLaction(params, player_ptr, signed_up);
 
             if(info)
+            {
                 (void) send(socket, "OK", 2, 0); 
+            }
             else
-                (void) send(socket, "ERR", 3, 0);     
+            {
+                (void) send(socket, "ERR", 3, 0);
+            }
         }
         resetBuffer(buffer);
     }
     exit:
     {
         sockets.erase(sockets.begin()+index);
-        if(pl_index <= players.size() && players.size() )
-            players.erase(players.begin()+pl_index);
+        if(player_ptr)
+        {
+            if(FINAL_pl_index <= players.size() && players.size() )
+                players.erase(players.begin()+FINAL_pl_index);
+            player_ptr = nullptr;
+        }
         cv.notify_all();
         return;
     }

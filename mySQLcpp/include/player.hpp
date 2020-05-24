@@ -15,6 +15,7 @@ private:
     int64_t socket = -1;
 
 public:
+    player() = default;
     player(const std::string& email, const std::string& nickname, const std::string& password);
     player(const char* email, const char* nickname, const char* password);
     virtual ~player() = default;
@@ -22,10 +23,12 @@ public:
     void setNickname(const std::string& nickname);
     void setNickname(const char* nickname);
     const char* getNickname(void) const;
+    std::string getNicknameStr(void) const;
 
     void setPassword(const std::string& password);
     void setPassword(const char* password);
     const char* getPassword(void) const;
+    std::string getPasswordStr(void) const;
 
     void setPoints(const uint16_t points);
     uint16_t getPoints(void) const;
@@ -34,6 +37,7 @@ public:
     uint8_t getPassedLevel(void) const;
     
     const char* getEmail(void) const;
+    std::string getEmailStr(void) const;
 
     void setSocket(const int64_t socket);
     int64_t getPlayerSocket(void) const;    

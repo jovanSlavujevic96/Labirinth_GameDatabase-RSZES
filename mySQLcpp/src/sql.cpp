@@ -182,7 +182,9 @@ SQL::~SQL() = default;
 bool SQL::sign_in(player_s* player)
 {
     if(!player)
+    {
         return false;
+    }
 
     auto check = SQL_pimpl->check_existance(player->getNickname(), "nickname" );
     if(check == Error || check == Free)
