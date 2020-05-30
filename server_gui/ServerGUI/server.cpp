@@ -1,20 +1,15 @@
-#include <server.hpp>
+#include "server.h"
 
-#include <unistd.h> 
-#include <stdio.h> 
-#include <sys/socket.h> 
-#include <stdlib.h> 
-#include <netinet/in.h> 
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
 
 #include <string.h>
 #include <string>
-
 #include <vector>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-
-#include <iostream>
+#include <atomic>
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -26,11 +21,11 @@ private:
     static int8_t server_fd;
     const uint8_t addrlen;
 
-    std::vector<player_s> players;
-    std::unique_ptr<SQL> sql;
+    std::shared_ptr<SQL> sql;
 
     std::vector<int64_t> sockets;
     std::vector<std::thread> threads;
+    std::vector<player_s> players;
 
     uint64_t FindSocketsIndex(const int64_t socket);
     uint64_t FindPlayerIndex(const player_s* player);
@@ -39,7 +34,7 @@ private:
     void CommunicationWithClient(const int64_t socket);
 
 public:
-    ServerImpl(std::unique_ptr<SQL>& sql);
+    ServerImpl(std::shared_ptr<SQL>& sql);
     virtual ~ServerImpl();
 
     void NewClientReceivement(void);
@@ -59,39 +54,40 @@ uint64_t Server::ServerImpl::FindSocketsIndex(const int64_t socket)
     return sockets.size()+1;
 }
 
+
 bool Server::ServerImpl::ServerInit(void)
 {
-    const uint8_t opt = 1; 
+    const uint8_t opt = 1;
 
-    // Creating socket file descriptor 
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
-    { 
-        perror("socket failed"); 
-        return false; 
-    }
-
-    // Forcefully attaching socket to the port 8080 
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(int))) 
-    { 
-        perror("setsockopt"); 
-        return false; 
-    }
-    address.sin_family = AF_INET; 
-    address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons( PORT );
-
-    // Forcefully attaching socket to the port 8080 
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) 
-    { 
-        perror("bind failed"); 
-        return false; 
-    } 
-    if (listen(server_fd, 3) < 0) 
-    { 
-        perror("listen"); 
+    // Creating socket file descriptor
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    {
+        perror("socket failed");
         return false;
     }
-    return true;   
+
+    // Forcefully attaching socket to the port 8080
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(int)))
+    {
+        perror("setsockopt");
+        return false;
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons( PORT );
+
+    // Forcefully attaching socket to the port 8080
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
+    {
+        perror("bind failed");
+        return false;
+    }
+    if (listen(server_fd, 3) < 0)
+    {
+        perror("listen");
+        return false;
+    }
+    return true;
 }
 
 static void resetBuffer(char* buffer)
@@ -182,13 +178,10 @@ void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
     player_s * player_ptr;
     bool signed_up = false;
     uint64_t index, pl_index, FINAL_pl_index;
-    
-    std::mutex m;
-    std::condition_variable cv;
 
     while(true)
     {
-        index = FindSocketsIndex(socket);            
+        index = FindSocketsIndex(socket);
         auto ret = read(socket, buffer, BUFFER_SIZE);
         if(isBufferEmpty(buffer) || !ret || index > sockets.size() )
         {
@@ -200,7 +193,6 @@ void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
             bool info;
 
             player_s tmp_player(params[1], params[2], params[3] );
-            tmp_player.setSocket(socket);
 
             pl_index = FindPlayerIndex(&tmp_player);
 
@@ -212,7 +204,6 @@ void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
             {
                 if(!strcmp(params[0].c_str(), "SIGN_UP" ) && !signed_up )
                 {
-                    std::cout << "IM here!\n";
                     info = sql->insert_new_player(&tmp_player);
                     if(info)
                     {
@@ -243,7 +234,7 @@ void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
 
             if(info)
             {
-                (void) send(socket, "OK", 2, 0); 
+                (void) send(socket, "OK", 2, 0);
             }
             else
             {
@@ -261,13 +252,12 @@ void Server::ServerImpl::CommunicationWithClient(const int64_t socket)
                 players.erase(players.begin()+FINAL_pl_index);
             player_ptr = nullptr;
         }
-        cv.notify_all();
         return;
     }
-    
+
 }
 
-Server::ServerImpl::ServerImpl(std::unique_ptr<SQL>& sql) :
+Server::ServerImpl::ServerImpl(std::shared_ptr<SQL>& sql) :
     addrlen{sizeof(address)},
     sql{std::move(sql)}
 {
@@ -278,7 +268,7 @@ Server::ServerImpl::ServerImpl(std::unique_ptr<SQL>& sql) :
     }
 }
 
-Server::ServerImpl::~ServerImpl() 
+Server::ServerImpl::~ServerImpl()
 {
     for(auto &&thread : threads)
     {
@@ -288,9 +278,9 @@ Server::ServerImpl::~ServerImpl()
 
 void Server::ServerImpl::NewClientReceivement(void)
 {
+    int64_t new_socket;
     while(true)
     {
-        int64_t new_socket;
         if( !( (new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen) )<0 ) )
         {
             sockets.push_back(new_socket);
@@ -298,26 +288,29 @@ void Server::ServerImpl::NewClientReceivement(void)
             if(index >= threads.size() )
             {
                 threads.push_back(std::thread(&Server::ServerImpl::CommunicationWithClient, this, new_socket));
-                threads[threads.size()-1].join();
+                //threads[threads.size()-1].join();
             }
             else
             {
                 threads[index] = std::thread(&Server::ServerImpl::CommunicationWithClient, this, new_socket);
-                threads[index].join();
+                //threads[index].join();
             }
         }
     }
 }
 
-Server::Server(std::unique_ptr<SQL>& sql) :
-    ServerPimpl{std::make_unique<ServerImpl>(sql) }
-{
-
-}
-
-Server::~Server() = default;
-
 void Server::ClientCommunication(void)
 {
-    ServerPimpl->NewClientReceivement();
+  ServerPimpl->NewClientReceivement();
+}
+
+Server::Server(std::shared_ptr<SQL>& sql) :
+  ServerPimpl{std::make_unique<ServerImpl>(sql) }
+{
+  this->worker = std::thread(&Server::ClientCommunication, this);
+}
+
+Server::~Server()
+{
+  this->worker.join();
 }
