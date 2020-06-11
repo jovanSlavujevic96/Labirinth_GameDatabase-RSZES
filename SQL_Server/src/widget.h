@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <string>
-#include "../../sql/include/sql.h"
+#include "sql/include/sql.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui

@@ -1,7 +1,7 @@
 #include "leaderboard.h"
 #include "ui_leaderboard.h"
 #include <unistd.h>
-#include "../../server/include/server.h"
+#include "server/include/server.h"
 
 #include <atomic>
 #include <mutex>

@@ -1,5 +1,5 @@
-#include "../server/include/server.h"
-#include "../sql/include/sql.h"
+#include "server/include/server.h"
+#include "sql/include/sql.h"
 
 #include <iostream>
 

@@ -4,8 +4,8 @@
 #include <QWidget>
 #include <thread>
 #include <memory>
-#include "../../sql/include/sql.h"
-#include "../../server/include/server.h"
+#include "sql/include/sql.h"
+#include "server/include/server.h"
 
 namespace Ui {
   class Leaderboard;

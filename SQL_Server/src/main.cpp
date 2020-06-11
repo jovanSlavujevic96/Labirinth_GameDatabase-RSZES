@@ -2,8 +2,8 @@
 #include "leaderboard.h"
 
 #include <QApplication>
-#include "../../sql/include/sql.h"
-#include "../../server/include/server.h"
+#include "sql/include/sql.h"
+#include "server/include/server.h"
 #include <QThread>
 
 #include <iostream>
