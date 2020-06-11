@@ -39,31 +39,33 @@ std::string generateMessage(const char CHARACTER)
     static bool signed_up = false;
     SetKeyboard(KeyboardOld_);   
 	std::string tmp;
-	std::string email, nickname, password;
+	std::string email, password;
     std::string output="";
 	if(CHARACTER == 'a' || CHARACTER == 'A')
 	{
-		std::cout << "\nYou are trying to sign in!\nInsert email, nickname and password!\n";
-		std::cin >> email >> nickname >> password;
-		output = ("SIGN_IN\n" + email + '\n' + nickname + '\n' + password);
+        std::string email_nickname;
+		std::cout << "\nYou are trying to sign in!\nInsert email or nickname and password!\n";
+		std::cin >> email_nickname >> password;
+		output = ("SIGN_IN\n" + email_nickname + '\n' + password);
         signed_up = true;
 	}
 	else if(CHARACTER == 's' || CHARACTER == 'S')
 	{
 		std::string new_password;
-		std::cout << "\nYou are trying to change password!\nInsert email, nickname, old and new password!\n";
-		std::cin >> email >> nickname >> password >> new_password;
-		output = ("CHANGE_PASS\n" + email + '\n' + nickname + '\n' + password + '\n' + new_password);
+		std::cout << "\nYou are trying to change password!\nInsert email, old and new password!\n";
+		std::cin >> email >> password >> new_password;
+		output = ("CHANGE_PASS\n" + email + '\n' + password + '\n' + new_password);
 	}
 	else if(CHARACTER == 'd' || CHARACTER == 'D')
 	{
 		std::string new_name;
-		std::cout << "\nYou are trying to change name!\nInsert email, old name, password and new_name!\n";
-		std::cin >> email >> nickname >> password >> new_name;
-		output = ("CHANGE_NAME\n" + email + '\n' + nickname + '\n' + password + '\n' + new_name);
+		std::cout << "\nYou are trying to change name!\nInsert email, password and new_name!\n";
+		std::cin >> email >> password >> new_name;
+		output = ("CHANGE_NAME\n" + email +'\n' + password + '\n' + new_name);
 	}
     else if( (CHARACTER == 'w' || CHARACTER == 'W') && !signed_up)
     {
+        std::string nickname;
 		std::cout << "\nYou are trying to sign up!\nInsert email, name and password!\n";
 		std::cin >> email >> nickname >> password;
 		output = ("SIGN_UP\n" + email + '\n' + nickname + '\n' + password);
