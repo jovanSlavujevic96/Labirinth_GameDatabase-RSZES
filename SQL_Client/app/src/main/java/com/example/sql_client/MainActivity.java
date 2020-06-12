@@ -13,11 +13,18 @@ public class MainActivity extends AppCompatActivity
     private TextView textView;
     private Button button;
 
+    private static ClientSocket clientSocket = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if(clientSocket == null)
+        {
+            clientSocket = new ClientSocket();
+        }
 
         textView = (TextView)findViewById(R.id.sigin);
         button = (Button)findViewById(R.id.signup);
@@ -27,7 +34,6 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v)
             {
                 Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
-
                 startActivity(intent);
             }
         } );

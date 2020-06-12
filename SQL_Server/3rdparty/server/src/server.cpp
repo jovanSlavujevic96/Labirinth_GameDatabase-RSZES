@@ -150,7 +150,7 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 		{
 			goto exit;
 		}
-		std::cout << "MSG: " << buffer << '\n';
+		std::cout << "Socket: " << socket << " MSG: " << buffer << '\n';
         auto params = helper_func::parseString(buffer);
         bool info = false;
 
@@ -164,6 +164,7 @@ void Server::ServerImpl::ClientCommunication(int& socket)
             info = Server::ServerImpl::chooseSQLaction(params, signed_up);
         }
         msg = (true == info) ? "OK" : "ERR"; 
+        std::cout << "Socket: " << socket  << " MSG: " << msg << " sent!\n"; //
         if( (valread = send(socket, msg.c_str(), msg.length(), 0)) <= 0)
         {
             goto exit;
@@ -213,7 +214,7 @@ Server::ServerImpl::~ServerImpl()
 
 bool Server::ServerImpl::Init(void)
 {
-    const int opt = 1;
+    	const int opt = 1;
 
 	// Creating socket file descriptor 
 	if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
@@ -223,8 +224,7 @@ bool Server::ServerImpl::Init(void)
 	} 
 	
 	// Forcefully attaching socket to the port 8080 
-	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, 
-												&opt, sizeof(opt))) 
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) 
 	{ 
 		perror("setsockopt"); 
 		return false;//exit(EXIT_FAILURE); 
@@ -234,8 +234,7 @@ bool Server::ServerImpl::Init(void)
 	address.sin_port = htons( PORT ); 
 	
 	// Forcefully attaching socket to the port 8080 
-	if (bind(server_fd, (struct sockaddr *)&address, 
-								sizeof(address))<0) 
+	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) 
 	{ 
 		perror("bind failed"); 
 		return false;//exit(EXIT_FAILURE); 
@@ -246,7 +245,7 @@ bool Server::ServerImpl::Init(void)
         return false;//exit(EXIT_FAILURE); 
 	}
 
-    ClRcvTH = std::thread(&Server::ServerImpl::NewClientReceivement, this);
+    	ClRcvTH = std::thread(&Server::ServerImpl::NewClientReceivement, this);
 	ClRmTH = std::thread(&Server::ServerImpl::RemoveClients, this);
 
     return true;
