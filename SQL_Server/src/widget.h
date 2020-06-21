@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <string>
-#include "sql/include/sql.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -11,6 +10,8 @@ namespace Ui
   class Widget;
 };
 QT_END_NAMESPACE
+
+class SQL;
 
 class Widget : public QWidget
 {

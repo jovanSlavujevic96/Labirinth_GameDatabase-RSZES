@@ -1,6 +1,8 @@
 #include "widget.h"
 #include "ui_widget.h"
 
+#include "sql/include/sql.h"
+
 Widget::Widget(QWidget *parent)
   : QWidget(parent)
   , ui(new Ui::Widget)

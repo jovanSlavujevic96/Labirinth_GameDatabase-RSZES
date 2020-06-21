@@ -9,6 +9,17 @@ namespace SQL_state_handler
     typedef enum {Error, Free, Reserved} checkRow_st;
 };
 
+#define err "ERR_"
+#define errSrv err "SRV"
+#define errBName err "BAD_NAME"
+#define errBMail err "BAD_MAIL"
+#define errBPass err "BAD_PASS"
+#define errUName err "USED_NAME"
+#define errUMail err "USED_MAIL"
+#define errUPass err "USED_PASS"
+#define errBPts err "BAD_PTS"
+#define ok "OK"
+
 class SQL::SQL_impl
 {
 private:
@@ -221,113 +232,145 @@ bool SQL::sync(const std::string& admin_username, const std::string& admin_passw
     return synced;
 }
 
-bool SQL::sign_in(const std::string& player_username_mail, const std::string& player_password)
+std::string SQL::sign_in(const std::string& player_username_mail, const std::string& player_password)
 {
-    bool already_failed = false;
-
-    auto check = SQL_pimpl->check_existance(player_username_mail.c_str(), "nickname" );
-    if(check == SQL_state_handler::Error || check == SQL_state_handler::Free)
+    std::string data_type = "nickname";
+    for(const auto& letter: player_username_mail)
     {
-        //std::cout << "\nPlayer with nickname: " << player->getNickname() << " does not exist!\n";
-        //return false;
-        already_failed = true;
+        if('@' == letter)
+        {
+            data_type = "email";
+            break;
+        }
     }
 
-    if(already_failed)
+    auto check = SQL_pimpl->check_existance(player_username_mail.c_str(), data_type.c_str() );
+    if(SQL_state_handler::Error == check) 
     {
-      check = SQL_pimpl->check_existance(player_username_mail.c_str(), "email" );
-      if(check == SQL_state_handler::Error || check == SQL_state_handler::Free)
-      {
-          //std::cout << "\nPlayer with email: " << player->getEmail() << " does not exist!\n";
-          return false;
-      }
+        return errSrv;
     }
-    const char* type_of_data = (!already_failed) ? "nickname" : "email";
-    check = SQL_pimpl->check_password(player_password.c_str(), type_of_data,  player_username_mail.c_str());
-    if(check == SQL_state_handler::Error || check == SQL_state_handler::Free)
+    else if(SQL_state_handler::Free == check)
     {
-        //std::cout << "\nIncorrect password\n";
-        return false;
+        return data_type == "nickname" ? errBName : errBMail;
     }
-    return true;
+    
+    check = SQL_pimpl->check_password(player_password.c_str(), data_type.c_str(),  player_username_mail.c_str());
+    if(SQL_state_handler::Error == check) 
+    {
+        return errSrv;
+    }
+    else if(SQL_state_handler::Free == check)
+    {
+        return errBPass;
+    }
+    return ok;
 }
 
-bool SQL::insert_new_player(const std::string& player_mail, const std::string& player_username, const std::string& player_password)
+std::string SQL::insert_new_player(const std::string& player_mail, const std::string& player_username, const std::string& player_password)
 {
     //check does it exist allready
     auto check = SQL_pimpl->check_existance(player_username.c_str(), "nickname" );
-    if(check == SQL_state_handler::Error || check == SQL_state_handler::Reserved)
+    if(SQL_state_handler::Error == check)
     {
-        //std::cout << "\nPlayer with nickname: " << player->getNickname() << " already exist!\n";
-        return false;
+        return errSrv;
     }
+    else if (check == SQL_state_handler::Reserved)
+    {
+        return errUName;
+    }
+
     check = SQL_pimpl->check_existance(player_mail.c_str(), "email" );
-    if(check == SQL_state_handler::Error || check == SQL_state_handler::Reserved)
+    if(SQL_state_handler::Error == check) 
     {
-        //std::cout << "\nPlayer with email: " << player->getEmail() << " already exist!\n";
-        return false;
+        return errSrv;
     }
-    return SQL_pimpl->insert_new_player(player_mail, player_username, player_password);
+    else if(SQL_state_handler::Reserved == check)
+    {
+        return errUMail;
+    }
+
+    return (true == SQL_pimpl->insert_new_player(player_mail, player_username, player_password) ) ? ok : errSrv;
 }
 
-bool SQL::change_players_name(const std::string& player_mail, const std::string& player_password, const std::string& new_username)
+std::string SQL::change_players_name(const std::string& player_mail, const std::string& player_password, const std::string& new_username)
 {
     //check does it exist allready
     auto check = SQL_pimpl->check_existance(player_mail.c_str(), "email" );
-    if(SQL_state_handler::Error == check || SQL_state_handler::Free == check)
+    if(SQL_state_handler::Error == check) 
     {
-        //std::cout << "\nPlayer with this email don't exists!\n";
-        return false;
+        return errSrv;
     }
+    else if(SQL_state_handler::Free == check)
+    {
+        return errBMail;
+    }
+
     check = SQL_pimpl->check_password(player_password.c_str(), "email", player_mail.c_str() );
-    if(SQL_state_handler::Error == check || SQL_state_handler::Free == check)
+    if(SQL_state_handler::Error == check) 
     {
-        //std::cout << "\nPlayer with this email don't exists!\n";
-        return false;
+        return errSrv;
     }
+    else if(SQL_state_handler::Free == check)
+    {
+        return errBPass;
+    }
+
     check = SQL_pimpl->check_existance(new_username.c_str(), "nickname");
-    if(SQL_state_handler::Error == check || SQL_state_handler::Reserved == check)
+    if(SQL_state_handler::Error == check)
     {
-        //std::cout << "\nSuggested new nickname has already exists!\n";
-        return false;
+        return errSrv;
     }
-    return SQL_pimpl->change_players_name(player_mail, new_username);
+    else if(SQL_state_handler::Reserved == check)
+    {
+        return errUName;
+    }
+
+    return (true == SQL_pimpl->change_players_name(player_mail, new_username)) ? ok : errSrv;
 }
 
-bool SQL::change_players_password(const std::string& player_mail, const std::string& player_password, const std::string& new_password)
+std::string SQL::change_players_password(const std::string& player_mail, const std::string& player_password, const std::string& new_password)
 {
     //check does it exist already
     auto check = SQL_pimpl->check_existance(player_mail.c_str(), "email" );
-    if(SQL_state_handler::Error == check || SQL_state_handler::Free == check)
+    if(SQL_state_handler::Error == check)
     {
-        //std::cout << "\nPlayer with this nickname don't exists!\n";
-        return false;
+        return errSrv;
     }
+    else if (SQL_state_handler::Free == check)
+    {
+        return errBMail;
+    }
+
     check = SQL_pimpl->check_password(player_password.c_str(), "email", player_mail.c_str() );
-    if(SQL_state_handler::Error == check || SQL_state_handler::Free == check)
+    if(SQL_state_handler::Error == check)
     {
-        //std::cout << "\nPlayer with this email don't exists!\n";
-        return false;
+        return errSrv;
     }
-    return SQL_pimpl->change_players_password(player_mail, new_password);
+    else if(SQL_state_handler::Free == check)
+    {
+        return errBPass;
+    }
+    return (true == SQL_pimpl->change_players_password(player_mail, new_password)) ? ok : errSrv;
 }
 
-bool SQL::change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level)
+std::string SQL::change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level)
 {
     if( !(points <= (uint16_t)500) || !(passed_level <= (uint8_t)5) )
     {
-        //std::cout << "\nBad level or points!\n";
-        return false;
+        return errBPts;
     }
+    
     //check does it exist already
     const auto check = SQL_pimpl->check_existance(player_mail.c_str(), "email" );
-    if(SQL_state_handler::Error == check || SQL_state_handler::Free == check)
+    if(check == SQL_state_handler::Error)
     {
-        //std::cout << "\nPlayer with this nickname don't exists!\n";
-        return false;
+        return errSrv;
     }
-
-    return SQL_pimpl->change_players_score(player_mail, points, passed_level);
+    else if(check == SQL_state_handler::Free)
+    {
+        return errBMail;
+    }
+    return (true == SQL_pimpl->change_players_score(player_mail, points, passed_level)) ? ok : errSrv ;
 }
 
 std::vector<std::string> SQL::getLeaderboard(void) const

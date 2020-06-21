@@ -8,7 +8,7 @@ import java.net.Socket;
 
 public class ClientSocket
 {
-    static private Thread Thread1 = null, Thread2 = null, Thread3 = null;
+    static private Thread Thread1 = null;
     static private Socket Socket = null;
     static private PrintWriter printWriter = null;
     static private BufferedReader bufferedReader = null;
@@ -25,15 +25,20 @@ public class ClientSocket
         }
     }
 
-    public boolean SendMessage(String msgData)
+    public String Communicate(String msgData)
     {
         if(false == connected || this.sndMsg != null)
         {
-            return false;
+            Thread1 = new Thread(new Connector() );
+            Thread1.start();
+            return null;
         }
         this.sndMsg = msgData;
-        new Thread(new Talker() ).start();
-        return true;
+        new Thread(new Communication() ).start();
+        while(null == this.rcvMsg);
+        final String tmp = this.rcvMsg;
+        this.rcvMsg = null;
+        return tmp;
     }
 
     private class Connector implements Runnable
@@ -49,60 +54,36 @@ public class ClientSocket
                     printWriter = new PrintWriter(Socket.getOutputStream() );
                     bufferedReader = new BufferedReader(new InputStreamReader(Socket.getInputStream() ));
                     connected = true;
+                    sndMsg = null;
+                    rcvMsg = null;
                     break;
                 }
                 catch (IOException e)
                 {
+                    connected = false;
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    private class Listener implements Runnable
+    private class Communication implements Runnable
     {
         @Override
         public void run()
         {
-            while(true)
-            {
-                try
-                {
-                    final String rcv = bufferedReader.readLine();
-                    if(rcv != null)
-                    {
-                        rcvMsg = rcv;
-                    }
-                    else
-                    {
-                        connected = false;
-                        Thread1 = new Thread(new Connector() );
-                        Thread1.start();
-                        break;
-                    }
-                }
-                catch (IOException e)
-                {
+            ClientSocket.this.printWriter.write(ClientSocket.this.sndMsg);
+            ClientSocket.this.printWriter.flush();
+            ClientSocket.this.sndMsg = null;
+            ClientSocket.this.rcvMsg = null;
+            while(null == ClientSocket.this.rcvMsg) {
+                try {
+                    ClientSocket.this.rcvMsg = bufferedReader.readLine();
+                } catch (IOException e) {
                     e.printStackTrace();
+                    ClientSocket.this.connected = false;
                 }
             }
-
         }
     }
-
-    private class Talker implements Runnable
-    {
-        @Override
-        public void run()
-        {
-            if(false == connected)
-            {
-                return;
-            }
-            printWriter.write(sndMsg);
-            printWriter.flush();
-            sndMsg = null;
-        }
-    }
-
 }

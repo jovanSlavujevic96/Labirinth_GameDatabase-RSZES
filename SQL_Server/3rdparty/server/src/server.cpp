@@ -1,4 +1,5 @@
 #include "../include/server.h"
+#include "../../sql/include/sql.h"
 
 #include <unistd.h> 
 #include <stdio.h> 
@@ -93,7 +94,7 @@ private:
     std::thread ClRcvTH, ClRmTH;
     std::shared_ptr<SQL> sql_ptr;
 
-    bool chooseSQLaction(const std::vector<std::string>& parameters, bool& signed_up);
+    std::string chooseSQLaction(const std::vector<std::string>& parameters, bool& signed_up);
     void NewClientReceivement(void);
     void ClientCommunication(int& socket);
     void RemoveClients(void);
@@ -107,12 +108,13 @@ public:
     bool AssignSQL(std::shared_ptr<SQL>& sql);
 };
 
-bool Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& parameters, bool& signed_up)
+std::string Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& parameters, bool& signed_up)
 {
     if(parameters[0] == "SIGN_IN")
     {
-        signed_up = sql_ptr->sign_in(parameters[1], parameters[2]);
-        return signed_up;
+        std::string res;
+        signed_up = ("OK" == (res = sql_ptr->sign_in(parameters[1], parameters[2] )) ) ? true : false;
+        return res;
     }
     else if(parameters[0] == "CHANGE_PASS" && parameters.size() > 4)
     {
@@ -122,7 +124,7 @@ bool Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& paramet
     {
         return sql_ptr->change_players_name(parameters[1], parameters[2], parameters[3]);
     }
-    return false;
+    return nullptr;
 }
 
 void Server::ServerImpl::NewClientReceivement(void)
@@ -152,19 +154,18 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 		}
 		std::cout << "Socket: " << socket << " MSG: " << buffer << '\n';
         auto params = helper_func::parseString(buffer);
-        bool info = false;
 
         if("SIGN_UP" == params[0] && !signed_up )
         {
-            info = sql_ptr->insert_new_player(params[1], params[2], params[3]);
-            signed_up = info;
+            msg = sql_ptr->insert_new_player(params[1], params[2], params[3]);
+            signed_up = (msg == "OK") ? true : false;
         }
         else if(params[0] != "SIGN_UP")
         {
-            info = Server::ServerImpl::chooseSQLaction(params, signed_up);
+            msg = Server::ServerImpl::chooseSQLaction(params, signed_up);
         }
-        msg = (true == info) ? "OK" : "ERR"; 
-        std::cout << "Socket: " << socket  << " MSG: " << msg << " sent!\n"; //
+        msg += '\n';
+        std::cout << "Socket: " << socket  << " sent MSG: " << msg << " succesfully\n"; //
         if( (valread = send(socket, msg.c_str(), msg.length(), 0)) <= 0)
         {
             goto exit;
@@ -173,7 +174,7 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 	}
     exit:
     {
-        ///std::cout << "ClientCommunication :: exit\n";
+        std::cout << "ClientCommunication :: exit\n";
         remove_client::index = helper_func::GetSocketIndex(socket, client_sockets);
         remove_client::condition_var.notify_one();
         return;

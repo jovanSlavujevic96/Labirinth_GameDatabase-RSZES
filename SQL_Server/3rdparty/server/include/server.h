@@ -2,7 +2,8 @@
 #define SERVER_H
 
 #include <memory>
-#include "../../sql/include/sql.h"
+
+class SQL;
 
 class Server
 {

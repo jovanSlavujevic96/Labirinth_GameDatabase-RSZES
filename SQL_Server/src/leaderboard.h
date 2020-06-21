@@ -4,12 +4,15 @@
 #include <QWidget>
 #include <thread>
 #include <memory>
-#include "sql/include/sql.h"
-#include "server/include/server.h"
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
   class Leaderboard;
 }
+QT_END_NAMESPACE
+
+class SQL;
+class Server;
 
 class Leaderboard : public QWidget
 {

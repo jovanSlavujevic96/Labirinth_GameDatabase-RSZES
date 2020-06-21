@@ -14,6 +14,7 @@ public class SignUpActivity extends AppCompatActivity
     private Button signupButton;
     private EditText emailEditText, usernameEditText, passwordEditText;
     private TextView textView;
+    private static ClientSocket clientSocket = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -26,6 +27,11 @@ public class SignUpActivity extends AppCompatActivity
         emailEditText = findViewById(R.id.email);
         usernameEditText = findViewById(R.id.nickname);
         passwordEditText = findViewById(R.id.password);
+
+        if(null == clientSocket)
+        {
+            clientSocket = new ClientSocket();
+        }
 
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -40,16 +46,17 @@ public class SignUpActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-                String email, nickname, password;
-                email = emailEditText.getText().toString();
-                nickname = usernameEditText.getText().toString();
+                final String email = emailEditText.getText().toString(),
+                nickname = usernameEditText.getText().toString(),
                 password = passwordEditText.getText().toString();
 
-                String data = "SIGN_IN jotzilla96@gmail.com vujsla 1706996";
-                //socketConnection.send_text(data);
+                String msg = "SIGN_UP\n" + email + '\n' + nickname + '\n' + password;
+                msg = clientSocket.Communicate(msg);
 
-                //Intent intent = new Intent(SignUpActivity.this, SignInActivity.class);
-                //startActivity(intent);
+                if(msg == "OK") {
+                    Intent intent = new Intent(SignUpActivity.this, GameMenu.class);
+                    startActivity(intent);
+                }
             }
         } );
     }

@@ -1,6 +1,8 @@
 #include "leaderboard.h"
 #include "ui_leaderboard.h"
 #include <unistd.h>
+
+#include "sql/include/sql.h"
 #include "server/include/server.h"
 
 #include <atomic>

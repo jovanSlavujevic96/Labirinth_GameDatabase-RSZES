@@ -1,7 +1,9 @@
 package com.example.sql_client;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +17,7 @@ public class SignInActivity extends AppCompatActivity
     private EditText email_nicknameEditText, passwordEditText;
     private TextView textView;
     private static ClientSocket clientSocket = null;
+    private static AlertDialog.Builder dlgAlert = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -22,8 +25,17 @@ public class SignInActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        if(clientSocket == null) {
+        if(null == clientSocket) {
             clientSocket = new ClientSocket();
+        }
+
+        if(null == dlgAlert)
+        {
+            dlgAlert = new AlertDialog.Builder(this);
+            dlgAlert.setMessage("wrong password or username");
+            dlgAlert.setTitle("Error Message...");
+            dlgAlert.setPositiveButton("OK", null);
+            dlgAlert.setCancelable(true);
         }
 
         signinButton = findViewById(R.id.signin);
@@ -46,14 +58,26 @@ public class SignInActivity extends AppCompatActivity
                 final String name_mail = email_nicknameEditText.getText().toString(),
                         password = passwordEditText.getText().toString();
 
-                final String msg = "SIGN_IN\n" + name_mail + '\n' + password;
-                if( true == clientSocket.SendMessage(msg) )
-                {
+                final String msgToSrv = "SIGN_IN\n" + name_mail + '\n' + password;
+                final String msgFromSrv = clientSocket.Communicate(msgToSrv);
 
+                if(msgFromSrv.contentEquals("ERR"))
+                {
+                    dlgAlert.create().show();
+                    dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                }
+                else if(msgFromSrv.contentEquals("OK") )
+                {
+                    Intent intent = new Intent(SignInActivity.this, GameMenu.class);
+                    startActivity(intent);
                 }
             }
         } );
-
 
     }
 }

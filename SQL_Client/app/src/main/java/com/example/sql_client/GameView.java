@@ -1,4 +1,4 @@
-package com.example.mazegame;
+package com.example.sql_client;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -10,7 +10,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import org.w3c.dom.Attr;
+//import org.w3c.dom.Attr;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -25,7 +25,6 @@ public class GameView extends View
 
     private Cell[][] cells;
     private Cell player, exit;
-    private boolean nije;
     private static final int COLS = 7, ROWS = 10;
     private static final float WALL_THICKNESS = 4;
     private float cellSize, hMargin, vMargin;
@@ -106,7 +105,7 @@ public class GameView extends View
         }
     }
 
-    public void createMaze(boolean nije)
+    public void createMaze(boolean includePlayer)
     {
         Stack<Cell> stack = new Stack<>();
         Cell current, next;
@@ -121,7 +120,7 @@ public class GameView extends View
             }
         }
 
-        if(nije) {
+        if(includePlayer) {
             player = cells[0][0];
         }
         exit = cells[COLS-1][ROWS-1];
@@ -142,13 +141,14 @@ public class GameView extends View
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas canvas)
+    {
         canvas.drawColor(Color.GREEN);
 
-        int width = getWidth();
-        int height = getHeight();
+        final int width = getWidth();
+        final int height = getHeight();
 
-        if (width / height < COLS / ROWS)
+        if ((float)(width / height) < (float)(COLS / ROWS) )
             cellSize = width / (COLS + 1);
         else
             cellSize = height / (ROWS + 1);
@@ -164,38 +164,38 @@ public class GameView extends View
             {
                 if(cells[x][y].topWall)
                     canvas.drawLine(
-                        x*cellSize,
-                        y*cellSize,
-                        (x+1)*cellSize,
-                        y*cellSize,
-                        wallPaint
+                            x*cellSize,
+                            y*cellSize,
+                            (x+1)*cellSize,
+                            y*cellSize,
+                            wallPaint
                     );
 
                 if(cells[x][y].leftWall)
                     canvas.drawLine(
-                        x*cellSize,
-                        y*cellSize,
-                        x*cellSize,
-                        (y+1)*cellSize,
-                        wallPaint
+                            x*cellSize,
+                            y*cellSize,
+                            x*cellSize,
+                            (y+1)*cellSize,
+                            wallPaint
                     );
 
                 if(cells[x][y].bottomWall)
                     canvas.drawLine(
-                        x*cellSize,
-                        (y+1)*cellSize,
-                        (x+1)*cellSize,
-                        (y+1)*cellSize,
-                        wallPaint
+                            x*cellSize,
+                            (y+1)*cellSize,
+                            (x+1)*cellSize,
+                            (y+1)*cellSize,
+                            wallPaint
                     );
 
                 if(cells[x][y].rightWall)
                     canvas.drawLine(
-                        (x+1)*cellSize,
-                        y*cellSize,
-                        (x+1)*cellSize,
-                        (y+1)*cellSize,
-                        wallPaint
+                            (x+1)*cellSize,
+                            y*cellSize,
+                            (x+1)*cellSize,
+                            (y+1)*cellSize,
+                            wallPaint
                     );
             }
         }
@@ -306,11 +306,11 @@ public class GameView extends View
 
     private class Cell{
         boolean
-            topWall = true,
-            leftWall = true,
-            bottomWall = true,
-            rightWall = true,
-            visited = false;
+                topWall = true,
+                leftWall = true,
+                bottomWall = true,
+                rightWall = true,
+                visited = false;
 
         int col, row;
 
