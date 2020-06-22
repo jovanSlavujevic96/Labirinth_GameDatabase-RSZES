@@ -1,7 +1,9 @@
 package com.example.sql_client;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +17,7 @@ public class SignUpActivity extends AppCompatActivity
     private EditText emailEditText, usernameEditText, passwordEditText;
     private TextView textView;
     private static ClientSocket clientSocket = null;
+    private static AlertDialog.Builder dlgAlert = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -31,6 +34,20 @@ public class SignUpActivity extends AppCompatActivity
         if(null == clientSocket)
         {
             clientSocket = new ClientSocket();
+        }
+
+        if(null == dlgAlert)
+        {
+            dlgAlert = new AlertDialog.Builder(this);
+            dlgAlert.setTitle("Error Message...");
+            dlgAlert.setPositiveButton("OK", null);
+            dlgAlert.setCancelable(true);
+            dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
         }
 
         textView.setOnClickListener(new View.OnClickListener() {
@@ -53,7 +70,18 @@ public class SignUpActivity extends AppCompatActivity
                 String msg = "SIGN_UP\n" + email + '\n' + nickname + '\n' + password;
                 msg = clientSocket.Communicate(msg);
 
-                if(msg == "OK") {
+                if(msg.contentEquals("ERR_USED_NAME"))
+                {
+                    dlgAlert.setMessage("This name has already been used");
+                    dlgAlert.create().show();
+                }
+                else if(msg.contentEquals("ERR_USED_MAIL"))
+                {
+                    dlgAlert.setMessage("This email address has already been used");
+                    dlgAlert.create().show();
+                }
+                else if(msg.contentEquals("OK") )
+                {
                     Intent intent = new Intent(SignUpActivity.this, GameMenu.class);
                     startActivity(intent);
                 }
