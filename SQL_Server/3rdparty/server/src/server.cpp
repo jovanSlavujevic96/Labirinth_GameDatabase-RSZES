@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #define BUFFER_SIZE 1024
+#define LDB_FILENAME "test.txt"
 
 #include <mutex>
 #include <condition_variable>
@@ -76,7 +77,9 @@ static std::vector<std::string> parseString(const char* buffer)
             index++;
         }
         else if(!buffer[i])
+        {
             break;
+        }
     }
     return parameters;
 }
@@ -158,24 +161,48 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 		std::cout << "Socket: " << socket << " MSG: " << buffer << '\n';
         auto params = helper_func::parseString(buffer);
 
+        std::cout << "params[0] :: " << params[0] << '\n';
         if("SIGN_UP" == params[0] )
         {
             msg = sql_ptr->insert_new_player(params[1], params[2], params[3]);
             signed_up = (msg == "OK") ? true : false;
         }
-        else if("GET_LDB" == params[0] && !signed_up )
+        else if("GET_LDB" == params[0] && signed_up )  //send leaderboard via XML file
         {
-            
+            if(!sql_ptr->generateXMLfile(LDB_FILENAME) )
+            {
+                goto exit;
+            }
+            FILE *fd = fopen(LDB_FILENAME, "rb");
+            int bytes_read;
+            while (!feof(fd)) 
+            {
+                if ((bytes_read = fread(&buffer, 1, BUFFER_SIZE, fd)) > 0)
+                {
+                    if( (valread = send(new_socket, buffer, bytes_read, 0)) <= 0)
+                    {
+                        goto exit;
+                    }
+                }
+                else
+                    break;
+	        }
+            std::cout << "Socket: " << socket << " FILE sent\n";
+            fclose(fd);
         }
         else if(params[0] != "SIGN_UP" && params[0] != "GET_LDB")
         {
             msg = Server::ServerImpl::chooseSQLaction(params, signed_up);
         }
-        msg += '\n';
-        std::cout << "Socket: " << socket  << " sent MSG: " << msg << " succesfully\n"; //
-        if( (valread = send(socket, msg.c_str(), msg.length(), 0)) <= 0)
+
+        if(params[0] != "GET_LDB")
         {
-            goto exit;
+            msg += '\n';
+            std::cout << "Socket: " << socket  << " sent MSG: " << msg << " succesfully\n"; //
+            if( (valread = send(socket, msg.c_str(), msg.length(), 0)) <= 0)
+            {
+                goto exit;
+            }
         }
 		helper_func::clearBuffer(buffer);
 	}

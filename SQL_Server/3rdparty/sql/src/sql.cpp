@@ -374,9 +374,13 @@ std::string SQL::change_players_score(const std::string& player_mail, const uint
     return (true == SQL_pimpl->change_players_score(player_mail, points, passed_level)) ? ok : errSrv ;
 }
 
-bool SQL::generateXMLfile(void)
+bool SQL::generateXMLfile(const char* filename)
 {
-
+    std::ofstream outfile(filename);
+    outfile << "Look how the turn tables!" << std::endl;
+    outfile.close();
+    std::ifstream f(filename);
+    return f.good();      
 }
 
 std::vector<std::string> SQL::getLeaderboard(void) const

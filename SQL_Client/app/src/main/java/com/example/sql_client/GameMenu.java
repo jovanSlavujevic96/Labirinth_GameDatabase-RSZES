@@ -10,6 +10,7 @@ import android.widget.Button;
 public class GameMenu extends AppCompatActivity {
     private GameView gameView;
     private Button startGame, gotoLeaderboard;
+    private static ClientSocket clientSocket = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,7 +20,10 @@ public class GameMenu extends AppCompatActivity {
         gameView.createMaze(false);
         gotoLeaderboard = (Button) findViewById(R.id.button2);
         startGame = (Button) findViewById(R.id.button);
-        
+        if(clientSocket == null)
+        {
+            clientSocket = new ClientSocket();
+        }
         startGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -33,8 +37,11 @@ public class GameMenu extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Intent intent = new Intent(GameMenu.this, SignInActivity.class);
-                startActivity(intent);
+                if(true == clientSocket.TransmitFile("GET_LDB") )
+                {
+                    Intent intent = new Intent(GameMenu.this, SignInActivity.class);
+                    startActivity(intent);
+                }
             }
         });
     }
