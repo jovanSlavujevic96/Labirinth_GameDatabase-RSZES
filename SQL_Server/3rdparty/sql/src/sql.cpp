@@ -3,6 +3,7 @@
 #include <mysql/mysql.h>
 #include <string.h>
 #include <sstream>
+#include <fstream>  
 
 namespace SQL_state_handler
 {
@@ -371,6 +372,11 @@ std::string SQL::change_players_score(const std::string& player_mail, const uint
         return errBMail;
     }
     return (true == SQL_pimpl->change_players_score(player_mail, points, passed_level)) ? ok : errSrv ;
+}
+
+bool SQL::generateXMLfile(void)
+{
+
 }
 
 std::vector<std::string> SQL::getLeaderboard(void) const

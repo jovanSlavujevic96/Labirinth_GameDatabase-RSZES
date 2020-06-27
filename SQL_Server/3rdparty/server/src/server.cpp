@@ -135,7 +135,10 @@ void Server::ServerImpl::NewClientReceivement(void)
         std::cout << "new socket: " << new_socket << std::endl;
 		client_sockets.push_back((int)new_socket);
 		int index = helper_func::GetSocketIndex((int)new_socket, client_sockets);
-		client_threads.push_back(std::thread(&Server::ServerImpl::ClientCommunication, this, std::ref(client_sockets[index]) ) );
+		client_threads.push_back(std::thread(
+            &Server::ServerImpl::ClientCommunication, 
+            this, 
+            std::ref(client_sockets[index]) ) );
     }
 	std::cout << "NewClientReceivement :: exit\n";
 }
@@ -155,12 +158,16 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 		std::cout << "Socket: " << socket << " MSG: " << buffer << '\n';
         auto params = helper_func::parseString(buffer);
 
-        if("SIGN_UP" == params[0] && !signed_up )
+        if("SIGN_UP" == params[0] )
         {
             msg = sql_ptr->insert_new_player(params[1], params[2], params[3]);
             signed_up = (msg == "OK") ? true : false;
         }
-        else if(params[0] != "SIGN_UP")
+        else if("GET_LDB" == params[0] && !signed_up )
+        {
+            
+        }
+        else if(params[0] != "SIGN_UP" && params[0] != "GET_LDB")
         {
             msg = Server::ServerImpl::chooseSQLaction(params, signed_up);
         }

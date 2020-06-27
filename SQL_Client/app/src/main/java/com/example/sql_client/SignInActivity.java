@@ -59,7 +59,7 @@ public class SignInActivity extends AppCompatActivity
                         password = passwordEditText.getText().toString();
 
                 final String msgToSrv = "SIGN_IN\n" + name_mail + '\n' + password;
-                final String msgFromSrv = clientSocket.Communicate(msgToSrv);
+                final String msgFromSrv = clientSocket.TransmitString(msgToSrv);
 
                 if(msgFromSrv.contentEquals("ERR"))
                 {

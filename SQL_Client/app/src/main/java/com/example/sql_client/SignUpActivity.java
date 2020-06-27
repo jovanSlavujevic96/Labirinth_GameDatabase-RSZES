@@ -68,7 +68,7 @@ public class SignUpActivity extends AppCompatActivity
                 password = passwordEditText.getText().toString();
 
                 String msg = "SIGN_UP\n" + email + '\n' + nickname + '\n' + password;
-                msg = clientSocket.Communicate(msg);
+                msg = clientSocket.TransmitString(msg);
 
                 if(msg.contentEquals("ERR_USED_NAME"))
                 {

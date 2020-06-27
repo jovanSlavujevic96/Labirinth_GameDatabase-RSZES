@@ -1,6 +1,9 @@
 package com.example.sql_client;
 
+import android.os.Environment;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -25,16 +28,16 @@ public class ClientSocket
         }
     }
 
-    public String Communicate(String msgData)
+    public String TransmitString(String msgData)
     {
-        if(false == connected || this.sndMsg != null)
+        if(false == connected || this.sndMsg != null || msgData.contentEquals("GET_RESULT") )
         {
             Thread1 = new Thread(new Connector() );
             Thread1.start();
             return null;
         }
         this.sndMsg = msgData;
-        new Thread(new Communication() ).start();
+        new Thread(new StringTransmission() ).start();
         while(null == this.rcvMsg);
         final String tmp = this.rcvMsg;
         this.rcvMsg = null;
@@ -67,15 +70,15 @@ public class ClientSocket
         }
     }
 
-    private class Communication implements Runnable
+    private class StringTransmission implements Runnable
     {
         @Override
         public void run()
         {
+            ClientSocket.this.rcvMsg = null;
             ClientSocket.this.printWriter.write(ClientSocket.this.sndMsg);
             ClientSocket.this.printWriter.flush();
             ClientSocket.this.sndMsg = null;
-            ClientSocket.this.rcvMsg = null;
             while(null == ClientSocket.this.rcvMsg) {
                 try {
                     ClientSocket.this.rcvMsg = bufferedReader.readLine();
@@ -84,6 +87,16 @@ public class ClientSocket
                     ClientSocket.this.connected = false;
                 }
             }
+        }
+    }
+
+    private class FileTransmission implements Runnable
+    {
+        @Override
+        public void run() {
+            File file = new File(
+                Environment.getExternalStorageDirectory(), "test.txt"
+            );
         }
     }
 }

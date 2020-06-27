@@ -9,7 +9,7 @@ import android.widget.Button;
 
 public class GameMenu extends AppCompatActivity {
     private GameView gameView;
-    private Button button;
+    private Button startGame, gotoLeaderboard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,12 +17,23 @@ public class GameMenu extends AppCompatActivity {
         setContentView(R.layout.activity_game_menu);
         gameView = findViewById(R.id.view);
         gameView.createMaze(false);
-        button = (Button) findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
+        gotoLeaderboard = (Button) findViewById(R.id.button2);
+        startGame = (Button) findViewById(R.id.button);
+        
+        startGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 Intent intent = new Intent(GameMenu.this, GameActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        gotoLeaderboard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(GameMenu.this, SignInActivity.class);
                 startActivity(intent);
             }
         });
