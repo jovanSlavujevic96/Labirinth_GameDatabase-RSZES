@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sstream>
 #include <fstream>  
+#include <algorithm>
 
 namespace SQL_state_handler
 {
@@ -373,14 +374,21 @@ std::string SQL::change_players_score(const std::string& player_mail, const uint
     }
     return (true == SQL_pimpl->change_players_score(player_mail, points, passed_level)) ? ok : errSrv ;
 }
-
-bool SQL::generateXMLfile(const char* filename)
+#include <iostream> //@JOVAN DVLP
+bool SQL::generateXMLfile(const char* filename, unsigned int& numOfLines)
 {
     std::ofstream outfile(filename);
-    outfile << "Look how the turn tables!" << std::endl;
+    outfile << "Look how the turn tables!\nBITCHEEEEZ!" << std::endl;
     outfile.close();
-    std::ifstream f(filename);
-    return f.good();      
+
+    std::ifstream inFile(filename);
+    {
+        numOfLines = 0;
+        std::string unused;
+        while ( std::getline(inFile, unused) )
+            ++numOfLines;
+    }
+    return (bool)numOfLines;          
 }
 
 std::vector<std::string> SQL::getLeaderboard(void) const

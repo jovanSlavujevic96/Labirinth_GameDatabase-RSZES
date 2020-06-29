@@ -113,21 +113,29 @@ public:
 
 std::string Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& parameters, bool& signed_up)
 {
-    if(parameters[0] == "SIGN_IN")
+    if("SIGN_UP" == parameters[0] && parameters.size() >= 4)
     {
         std::string res;
-        signed_up = ("OK" == (res = sql_ptr->sign_in(parameters[1], parameters[2] )) ) ? true : false;
+        signed_up = ("OK" == (res = sql_ptr->insert_new_player(
+            parameters[1], parameters[2], parameters[3]) )) ? true : false;
         return res;
     }
-    else if(parameters[0] == "CHANGE_PASS" && parameters.size() > 4)
+    else if(parameters[0] == "SIGN_IN" && parameters.size() >= 3)
+    {
+        std::string res;
+        signed_up = ("OK" == (res = sql_ptr->sign_in(
+            parameters[1], parameters[2]) )) ? true : false;
+        return res;
+    }
+    else if(parameters[0] == "CHANGE_PASS" && parameters.size() >= 4 && signed_up)
     {
         return sql_ptr->change_players_password(parameters[1], parameters[2], parameters[3]);
     }
-    else if(parameters[0] == "CHANGE_NAME" && parameters.size() > 4)
+    else if(parameters[0] == "CHANGE_NAME" && parameters.size() >= 4 && signed_up)
     {
         return sql_ptr->change_players_name(parameters[1], parameters[2], parameters[3]);
     }
-    return nullptr;
+    return "ERR";
 }
 
 void Server::ServerImpl::NewClientReceivement(void)
@@ -162,17 +170,33 @@ void Server::ServerImpl::ClientCommunication(int& socket)
         auto params = helper_func::parseString(buffer);
 
         std::cout << "params[0] :: " << params[0] << '\n';
-        if("SIGN_UP" == params[0] )
+        if("GET_LDB" == params[0] && signed_up )  //send leaderboard via XML file
         {
-            msg = sql_ptr->insert_new_player(params[1], params[2], params[3]);
-            signed_up = (msg == "OK") ? true : false;
-        }
-        else if("GET_LDB" == params[0] && signed_up )  //send leaderboard via XML file
-        {
-            if(!sql_ptr->generateXMLfile(LDB_FILENAME) )
+            unsigned int numOfLines;
+            if(!sql_ptr->generateXMLfile(LDB_FILENAME, numOfLines) )
             {
                 goto exit;
             }
+            msg = std::to_string(numOfLines) + '\n';
+            if( (valread = send(socket, msg.c_str(), msg.length(), 0)) <= 0)
+            {
+                goto exit;
+            }
+            
+            std::cout << "MSG sent: " << msg; //
+
+            helper_func::clearBuffer(buffer);
+            valread = read(socket, buffer, BUFFER_SIZE);
+            msg = buffer;
+            msg.erase(msg.find('\n'), msg.length() );
+
+            std::cout << "MSG received: " << msg; //
+            
+            if(valread <= 0 || helper_func::checkIfBufferEmpty(buffer) || msg != "OK")
+		    {
+			    goto exit;
+		    }
+
             FILE *fd = fopen(LDB_FILENAME, "rb");
             int bytes_read;
             while (!feof(fd)) 
@@ -190,7 +214,7 @@ void Server::ServerImpl::ClientCommunication(int& socket)
             std::cout << "Socket: " << socket << " FILE sent\n";
             fclose(fd);
         }
-        else if(params[0] != "SIGN_UP" && params[0] != "GET_LDB")
+        else if(params[0] != "GET_LDB")
         {
             msg = Server::ServerImpl::chooseSQLaction(params, signed_up);
         }

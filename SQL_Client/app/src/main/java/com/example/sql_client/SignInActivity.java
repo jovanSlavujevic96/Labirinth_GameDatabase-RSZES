@@ -32,10 +32,15 @@ public class SignInActivity extends AppCompatActivity
         if(null == dlgAlert)
         {
             dlgAlert = new AlertDialog.Builder(this);
-            dlgAlert.setMessage("wrong password or username");
             dlgAlert.setTitle("Error Message...");
             dlgAlert.setPositiveButton("OK", null);
             dlgAlert.setCancelable(true);
+            dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
         }
 
         signinButton = findViewById(R.id.signin);
@@ -61,15 +66,20 @@ public class SignInActivity extends AppCompatActivity
                 final String msgToSrv = "SIGN_IN\n" + name_mail + '\n' + password;
                 final String msgFromSrv = clientSocket.TransmitString(msgToSrv);
 
-                if(msgFromSrv.contentEquals("ERR"))
+                if(msgFromSrv.contentEquals("ERR_BAD_NAME"))
                 {
+                    dlgAlert.setMessage("This username doesn't exist!");
                     dlgAlert.create().show();
-                    dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    });
+                }
+                else if(msgFromSrv.contentEquals("ERR_BAD_PASS"))
+                {
+                    dlgAlert.setMessage("Wrong password!");
+                    dlgAlert.create().show();
+                }
+                else if(msgFromSrv.contentEquals("ERR_BAD_MAIL"))
+                {
+                    dlgAlert.setMessage("This email doesn't exist!");
+                    dlgAlert.create().show();
                 }
                 else if(msgFromSrv.contentEquals("OK") )
                 {
