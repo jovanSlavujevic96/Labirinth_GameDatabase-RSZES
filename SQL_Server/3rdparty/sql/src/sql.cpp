@@ -378,7 +378,7 @@ std::string SQL::change_players_score(const std::string& player_mail, const uint
 bool SQL::generateXMLfile(const char* filename, unsigned int& numOfLines)
 {
     std::ofstream outfile(filename);
-    outfile << "Look how the turn tables!\nBITCHEEEEZ!" << std::endl;
+    outfile << "Look how the turn tables!\nBROOOO!\n";
     outfile.close();
 
     std::ifstream inFile(filename);
