@@ -78,10 +78,21 @@ void Leaderboard::LeaderboardOnScreen(void)
       Leaderboard_MThandler::cv.wait(lk, []{ return(false == Leaderboard_MThandler::start_counting);} );
       if(sql.get() != nullptr)
       {
-        auto vecPlayers = sql->getLeaderboard();
-        for(uint8_t i=0; i< (uint8_t)vecPlayers.size(); ++i)
+        std::vector<std::string> names, levels, points;
         {
-          auto qstr = QString(vecPlayers[i].c_str() );
+          auto vecPlayers = sql->getLeaderboard();
+          if(!vecPlayers.size() )
+          {
+              break;
+          }
+          names = vecPlayers[0];
+          levels = vecPlayers[1];
+          points = vecPlayers[2];
+        }
+        for(uint8_t i=0; i< (uint8_t)names.size(); ++i)
+        {
+          std::string format = names[i] + '/' + levels[i] + '/' + points[i];
+          auto qstr = QString(format.c_str() );
           (*player_names[i])->setText(qstr);
         }
       }

@@ -40,7 +40,7 @@ DISTNAME      = SQL_Server_GUI1.0.0
 DISTDIR = /home/jovan/AndroidMaze_SQLdatabase/SQL_Server/bin/.tmp/SQL_Server_GUI1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-rpath,/opt/Qt/5.15.0/gcc_64/lib
-LIBS          = $(SUBLIBS) -L../3rdparty/server/lib -lserver -L../3rdparty/sql/lib -lsql -L`mysql_config --cflags --libs` -pthread /opt/Qt/5.15.0/gcc_64/lib/libQt5Widgets.so /opt/Qt/5.15.0/gcc_64/lib/libQt5Gui.so /opt/Qt/5.15.0/gcc_64/lib/libQt5Core.so -lGL -lpthread   
+LIBS          = $(SUBLIBS) -L../3rdparty/server/lib -lserver -L../3rdparty/sql/lib -lsql -L`mysql_config --cflags --libs` -pthread -ltinyxml /opt/Qt/5.15.0/gcc_64/lib/libQt5Widgets.so /opt/Qt/5.15.0/gcc_64/lib/libQt5Gui.so /opt/Qt/5.15.0/gcc_64/lib/libQt5Core.so -lGL -lpthread   
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -865,8 +865,6 @@ moc_leaderboard.cpp: ../src/leaderboard.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qfiledevice.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qvector2d.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qtouchdevice.h \
-		../3rdparty/sql/include/sql.h \
-		../3rdparty/server/include/server.h \
 		moc_predefs.h \
 		/opt/Qt/5.15.0/gcc_64/bin/moc
 	/opt/Qt/5.15.0/gcc_64/bin/moc $(DEFINES) --include /home/jovan/AndroidMaze_SQLdatabase/SQL_Server/bin/moc_predefs.h -I/opt/Qt/5.15.0/gcc_64/mkspecs/linux-g++ -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src/-I -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/3rdparty -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src/-I -I/usr/include/mysql -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src/-I -I/usr/include/mysql/mysql -I/opt/Qt/5.15.0/gcc_64/include -I/opt/Qt/5.15.0/gcc_64/include/QtWidgets -I/opt/Qt/5.15.0/gcc_64/include/QtGui -I/opt/Qt/5.15.0/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../src/leaderboard.h -o moc_leaderboard.cpp
@@ -975,7 +973,6 @@ moc_widget.cpp: ../src/widget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qfiledevice.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qvector2d.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qtouchdevice.h \
-		../3rdparty/sql/include/sql.h \
 		moc_predefs.h \
 		/opt/Qt/5.15.0/gcc_64/bin/moc
 	/opt/Qt/5.15.0/gcc_64/bin/moc $(DEFINES) --include /home/jovan/AndroidMaze_SQLdatabase/SQL_Server/bin/moc_predefs.h -I/opt/Qt/5.15.0/gcc_64/mkspecs/linux-g++ -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src/-I -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/3rdparty -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src/-I -I/usr/include/mysql -I/home/jovan/AndroidMaze_SQLdatabase/SQL_Server/src/-I -I/usr/include/mysql/mysql -I/opt/Qt/5.15.0/gcc_64/include -I/opt/Qt/5.15.0/gcc_64/include/QtWidgets -I/opt/Qt/5.15.0/gcc_64/include/QtGui -I/opt/Qt/5.15.0/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../src/widget.h -o moc_widget.cpp
@@ -1109,9 +1106,7 @@ main.o: ../src/main.cpp ../src/widget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qfiledevice.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qvector2d.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qtouchdevice.h \
-		../3rdparty/sql/include/sql.h \
 		../src/leaderboard.h \
-		../3rdparty/server/include/server.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QApplication \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/qapplication.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qcoreapplication.h \
@@ -1119,6 +1114,8 @@ main.o: ../src/main.cpp ../src/widget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/qdesktopwidget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qguiapplication.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qinputmethod.h \
+		../3rdparty/sql/include/sql.h \
+		../3rdparty/server/include/server.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/QThread \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qthread.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qdeadlinetimer.h \
@@ -1229,8 +1226,6 @@ leaderboard.o: ../src/leaderboard.cpp ../src/leaderboard.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qfiledevice.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qvector2d.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qtouchdevice.h \
-		../3rdparty/sql/include/sql.h \
-		../3rdparty/server/include/server.h \
 		ui_leaderboard.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/QVariant \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QApplication \
@@ -1271,7 +1266,9 @@ leaderboard.o: ../src/leaderboard.cpp ../src/leaderboard.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/qabstractbutton.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QTableView \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/qtableview.h \
-		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QVBoxLayout
+		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QVBoxLayout \
+		../3rdparty/sql/include/sql.h \
+		../3rdparty/server/include/server.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o leaderboard.o ../src/leaderboard.cpp
 
 widget.o: ../src/widget.cpp ../src/widget.h \
@@ -1378,7 +1375,6 @@ widget.o: ../src/widget.cpp ../src/widget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/qfiledevice.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qvector2d.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtGui/qtouchdevice.h \
-		../3rdparty/sql/include/sql.h \
 		ui_widget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtCore/QVariant \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QApplication \
@@ -1400,7 +1396,8 @@ widget.o: ../src/widget.cpp ../src/widget.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/QPushButton \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/qpushbutton.h \
 		/opt/Qt/5.15.0/gcc_64/include/QtWidgets/qabstractbutton.h \
-		/opt/Qt/5.15.0/gcc_64/include/QtGui/qicon.h
+		/opt/Qt/5.15.0/gcc_64/include/QtGui/qicon.h \
+		../3rdparty/sql/include/sql.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o widget.o ../src/widget.cpp
 
 moc_leaderboard.o: moc_leaderboard.cpp 

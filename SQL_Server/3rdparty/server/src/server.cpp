@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 #define BUFFER_SIZE 1024
-#define LDB_FILENAME "test.txt"
+#define LDB_FILENAME "leaderboard.xml"
 
 #include <mutex>
 #include <condition_variable>
@@ -30,7 +30,7 @@ namespace remove_client
 namespace helper_func
 {
 
-static int GetSocketIndex(int socket, std::vector<int>& socket_vector)
+static inline int GetSocketIndex(int socket, std::vector<int>& socket_vector)
 {
     for(unsigned int i=0; i<socket_vector.size(); ++i)
     {
@@ -40,7 +40,7 @@ static int GetSocketIndex(int socket, std::vector<int>& socket_vector)
     return -1;
 }
 
-static bool checkIfBufferEmpty(const char* buffer)
+static inline bool checkIfBufferEmpty(const char* buffer)
 {
     for(unsigned int i=0; i<strlen(buffer); ++i)
     {
@@ -50,7 +50,7 @@ static bool checkIfBufferEmpty(const char* buffer)
     return true;
 }
 
-static void clearBuffer(char* buffer)
+static inline void clearBuffer(char* buffer)
 {
     for(unsigned int i=0; i<strlen(buffer); ++i)
     {
@@ -60,12 +60,12 @@ static void clearBuffer(char* buffer)
     }
 }
 
-static std::vector<std::string> parseString(const char* buffer)
+static inline std::vector<std::string> parseString(const char* buffer)
 {
     std::vector<std::string> parameters;
     parameters.push_back(std::string() );
     uint8_t index=0;
-    for(uint16_t i=0; i<1024; ++i)
+    for(uint16_t i=0; i<BUFFER_SIZE; ++i)
     {
         if(buffer[i] != '\n' && buffer[i])
         {
@@ -159,7 +159,8 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 	char buffer[BUFFER_SIZE] = {0};
     int valread;
     bool signed_up = false;
-    std::string msg; 
+    std::string msg;
+    std::vector<std::string> fileContent; 
 	while(true)
 	{
 		if( (valread = read(socket, buffer, BUFFER_SIZE) ) <= 0 || helper_func::checkIfBufferEmpty(buffer) )
@@ -172,12 +173,11 @@ void Server::ServerImpl::ClientCommunication(int& socket)
         std::cout << "params[0] :: " << params[0] << '\n';
         if("GET_LDB" == params[0] && signed_up )  //send leaderboard via XML file
         {
-            unsigned int numOfLines;
-            if(!sql_ptr->generateXMLfile(LDB_FILENAME, numOfLines) )
+            if(!sql_ptr->generateXMLfile(LDB_FILENAME, fileContent) )
             {
                 goto exit;
             }
-            msg = std::to_string(numOfLines) + '\n';
+            msg = std::to_string(fileContent.size() ) + '\n';
             if( (valread = send(socket, msg.c_str(), msg.length(), 0)) <= 0)
             {
                 goto exit;
@@ -197,22 +197,15 @@ void Server::ServerImpl::ClientCommunication(int& socket)
 			    goto exit;
 		    }
 
-            FILE *fd = fopen(LDB_FILENAME, "rb");
-            int bytes_read;
-            while (!feof(fd)) 
+            for(const auto& file_buff : fileContent) 
             {
-                if ((bytes_read = fread(&buffer, 1, BUFFER_SIZE, fd)) > 0)
+                if( (valread = send(new_socket, file_buff.c_str(), file_buff.length(), 0)) <= 0)
                 {
-                    if( (valread = send(new_socket, buffer, bytes_read, 0)) <= 0)
-                    {
-                        goto exit;
-                    }
+                    goto exit;
                 }
-                else
-                    break;
-	        }
+            }                
+	        
             std::cout << "Socket: " << socket << " FILE sent\n";
-            fclose(fd);
         }
         else if(params[0] != "GET_LDB")
         {

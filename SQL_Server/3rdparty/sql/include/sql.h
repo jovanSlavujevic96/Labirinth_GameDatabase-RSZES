@@ -21,8 +21,8 @@ public:
     std::string change_players_name(const std::string& player_mail, const std::string& player_password, const std::string& new_username);
     std::string change_players_password(const std::string& player_mail, const std::string& player_password, const std::string& new_password);
     std::string change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level);
-    bool generateXMLfile(const char* filename, unsigned int& numOfLiens);
-    std::vector<std::string> getLeaderboard(void) const;   
+    bool generateXMLfile(const char* filename, std::vector<std::string>& fileContent);
+    std::vector<std::vector<std::string>> getLeaderboard(void) const;   
 };
 
 #endif // SQL_H

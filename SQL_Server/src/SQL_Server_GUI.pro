@@ -39,6 +39,8 @@ LIBS += -L../3rdparty/server/lib -lserver
 LIBS += -L../3rdparty/sql/lib -lsql
 LIBS += -L`mysql_config --cflags --libs`
 LIBS += -pthread
+LIBS += -ltinyxml
+LIBS += -lGL
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

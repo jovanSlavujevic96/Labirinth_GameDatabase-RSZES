@@ -1,3 +1,7 @@
 terminate called without an active exception
 Aborted
 
+terminate called after throwing an instance of 'std::out_of_range'
+  what():  basic_string::erase: __pos (which is 18446744073709551615) > this->size() (which is 0)
+Aborted
+

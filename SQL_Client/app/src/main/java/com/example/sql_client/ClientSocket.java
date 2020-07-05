@@ -1,24 +1,24 @@
 package com.example.sql_client;
 
-import android.Manifest;
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
-import android.os.Build;
-import android.os.Environment;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import static androidx.core.app.ActivityCompat.requestPermissions;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class ClientSocket
 {
@@ -28,23 +28,19 @@ public class ClientSocket
     static private BufferedReader bufferedReader = null;
     static private volatile String rcvMsg = null, sndMsg = null;
     final private String SRV_IP = "192.168.0.200";
-    final private int SRV_PORT = 8080, RequsetCode = 656;
+    final private int SRV_PORT = 8080;
     static private volatile boolean connected = false, file_received = false;
     public volatile boolean Exception_happened = false;
-    final private String LDB_Command = "GET_LDB\n";
-    static private Activity activity = null;
+    final private String LDB_Command = "GET_LDB\n", FILE_NAME = "test.txt";
 
     public ClientSocket()
     {
-        if(Thread1 == null) {
+        if(null == Thread1)
+        {
             Thread1 = new Thread(new Connector() );
             Thread1.start();
         }
-    }
-
-    public void SetActivity(Activity activity)
-    {
-        this.activity = activity;
+        Exception_happened = false;
     }
 
     public String TransmitString(String msgData)
@@ -64,7 +60,7 @@ public class ClientSocket
         return tmp;
     }
 
-    public boolean TransmitFile(String msgData)
+    public boolean TransmitFile(String msgData, Context context)
     {
         if(false == connected || this.sndMsg != null || !msgData.contentEquals(LDB_Command) )
         {
@@ -74,7 +70,7 @@ public class ClientSocket
         }
         this.file_received = false;
         this.sndMsg = msgData;
-        new Thread(new FileTransmission() ).start();
+        new Thread(new FileTransmission(context) ).start();
         while(false == this.file_received && false == this.Exception_happened);
         this.sndMsg = null;
         this.rcvMsg = null;
@@ -132,109 +128,63 @@ public class ClientSocket
 
     private class FileTransmission implements Runnable
     {
+        private Context context = null;
+        public FileTransmission(Context context)
+        {
+            this.context = context;
+        }
+
         @Override
         public void run()
         {
-//            File files_folder = new File(Environment.getDownloadCacheDirectory().getAbsolutePath() );
-//            File files_child = new File(files_folder, "files_child");
-//            files_child.mkdirs();
-//            File created_folder = new File()
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            FileOutputStream fos = null;
+            try
             {
-                requestPermissions(ClientSocket.this.activity,
-                    new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE}, ClientSocket.this.RequsetCode);
+                fos = context.openFileOutput(FILE_NAME, MODE_PRIVATE);
             }
-
-            File root = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "My Folder");
-            if (!root.exists() )
+            catch (FileNotFoundException e)
             {
-                root.mkdir();
-            }
-            if (!root.exists() )
-            {
-                Exception_happened = true;
+                e.printStackTrace();
+                ClientSocket.this.Exception_happened = true;
                 return;
-            }
-            File filepath = new File(root.getAbsolutePath() + File.separator + "My Text.txt");
-            try {
-                FileWriter writer = new FileWriter(filepath);
-            }
-            catch(FileNotFoundException e)
-            {
-                Exception_happened = true;
-                return;
-            }
-            catch (IOException e) {
-
             }
 
             ClientSocket.this.rcvMsg = null;
             new Thread(new StringTransmission() ).start();
             while(null == ClientSocket.this.rcvMsg );
 
+            ClientSocket.this.rcvMsg.substring(0, ClientSocket.this.rcvMsg.length() - 1);
+            int LineNumbers = Integer.parseInt(ClientSocket.this.rcvMsg);
+
             printWriter.write("OK\n");
             printWriter.flush();
 
-            ClientSocket.this.rcvMsg.substring(0, ClientSocket.this.rcvMsg.length() - 1);
-            int LineNumbers = Integer.parseInt(ClientSocket.this.rcvMsg);
             while (LineNumbers != 0) {
                 try {
                     ClientSocket.this.rcvMsg = bufferedReader.readLine();
+                    ClientSocket.this.rcvMsg += '\n';
+                    fos.write(ClientSocket.this.rcvMsg.getBytes() );
                     LineNumbers--;
                 } catch (IOException e) {
                     e.printStackTrace();
                     ClientSocket.this.connected = false;
+                    return;
                 }
             }
-
-            ClientSocket.this.file_received = true;
-/*
-            try
+            if (fos != null)
             {
-                File root = new File(Environment.getExternalStorageDirectory(), "My Folder");
-                if (!root.exists() )
+                try
                 {
-                    root.mkdir();
+                    fos.close();
                 }
-                File filepath = new File(root, "myfile.txt");
-                FileWriter writer = new FileWriter(filepath);
-                writer.append("Look how the turn tables!\n");
-                writer.flush();
-                writer.close();
-
-                ClientSocket.this.sndMsg = filepath.getPath();
-
-                ClientSocket.this.printWriter.write(ClientSocket.this.sndMsg);
-                ClientSocket.this.printWriter.flush();
-
-                ClientSocket.this.sndMsg = null;
-                ClientSocket.this.file_received = true;
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                    ClientSocket.this.Exception_happened = true;
+                    return;
+                }
             }
-            catch (IOException e)
-            {
-
-            }
-*/
-//            File file = new File(Environment.getExternalStorageDirectory(),"test.txt");
-//            while(true)
-//            {
-//                try {
-//                    byte[] bytes = new byte[1024];
-//                    InputStream is = ClientSocket.this.Socket.getInputStream();
-//                    FileOutputStream fos = new FileOutputStream(file);
-//                    BufferedOutputStream bos = new BufferedOutputStream(fos);
-//                    int bytesRead = is.read(bytes, 0, bytes.length);
-//                    bos.write(bytes, 0, bytesRead);
-//                    bos.close();
-//                    ClientSocket.this.file_received = true;
-//                    break;
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    ClientSocket.this.connected = false;
-//                }
-//            }
-
+            ClientSocket.this.file_received = true;
         }
     }
 

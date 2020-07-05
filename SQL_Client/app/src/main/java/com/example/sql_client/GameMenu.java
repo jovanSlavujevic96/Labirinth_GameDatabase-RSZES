@@ -12,8 +12,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import static androidx.core.app.ActivityCompat.requestPermissions;
-
 public class GameMenu extends AppCompatActivity {
     private GameView gameView;
     private Button startGame, gotoLeaderboard;
@@ -45,27 +43,12 @@ public class GameMenu extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                if(clientSocket.TransmitFile("GET_LDB\n") /*|| clientSocket.Exception_happened*/)
+                if(clientSocket.TransmitFile("GET_LDB\n", getApplicationContext() ) /*|| clientSocket.Exception_happened*/)
                 {
-                    Intent intent = new Intent(GameMenu.this, SignInActivity.class);
+                    Intent intent = new Intent(GameMenu.this, Leaderboard.class);
                     startActivity(intent);
                 }
             }
         });
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(this.RequsetCode == requestCode && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        {
-
-        }
-        else
-        {
-            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE}, this.RequsetCode);
-        }
     }
 }

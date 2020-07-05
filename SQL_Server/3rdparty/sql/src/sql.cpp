@@ -1,6 +1,8 @@
 #include "../include/sql.h"
 
 #include <mysql/mysql.h>
+#include <tinyxml.h>
+
 #include <string.h>
 #include <sstream>
 #include <fstream>  
@@ -22,6 +24,8 @@ namespace SQL_state_handler
 #define errBPts err "BAD_PTS"
 #define ok "OK"
 
+#define BUFFER_SIZE 1024
+
 class SQL::SQL_impl
 {
 private:
@@ -39,8 +43,7 @@ public:
     bool change_players_name(const std::string& player_mail, const std::string& new_username);
     bool change_players_password(const std::string& player_mail, const std::string& new_password);
     bool change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level);
-    std::vector<std::string> getLeaderboard(void) const;
-
+    std::vector<std::vector<std::string>> getLeaderboard(void) const;
 };
 
 //private SQL_impl
@@ -189,9 +192,9 @@ bool SQL::SQL_impl::change_players_score(const std::string& player_mail, const u
     return true;
 }
 
-std::vector<std::string> SQL::SQL_impl::getLeaderboard(void) const
+std::vector<std::vector<std::string>> SQL::SQL_impl::getLeaderboard(void) const
 {
-    std::vector<std::string>tmp;
+    std::vector<std::vector<std::string>> tmp;
     MYSQL_RES* res;
     int qstate = mysql_query(m_connector, "SELECT nickname, points, level FROM players");
     if(qstate)
@@ -205,12 +208,18 @@ std::vector<std::string> SQL::SQL_impl::getLeaderboard(void) const
         //std::cout << "\nStoring request has been failed\n";
         return tmp;
     }
+    std::vector<std::string> names, points, levels;
     MYSQL_ROW row = mysql_fetch_row(res);
     while(row && tmp.size() < 9)
     {
-        tmp.push_back(std::string(row[0]) + ' ' + std::string(row[1]) + ' ' + std::string(row[2]) );
+        names.push_back(row[0]  );
+        points.push_back(row[1] );
+        levels.push_back(row[2] );
         row = mysql_fetch_row(res);
     }
+    tmp.push_back(names);
+    tmp.push_back(levels);
+    tmp.push_back(points);
     return tmp;
 }
 
@@ -374,24 +383,68 @@ std::string SQL::change_players_score(const std::string& player_mail, const uint
     }
     return (true == SQL_pimpl->change_players_score(player_mail, points, passed_level)) ? ok : errSrv ;
 }
-#include <iostream> //@JOVAN DVLP
-bool SQL::generateXMLfile(const char* filename, unsigned int& numOfLines)
-{
-    std::ofstream outfile(filename);
-    outfile << "Look how the turn tables!\nBROOOO!\n";
-    outfile.close();
 
-    std::ifstream inFile(filename);
+static inline void clearBuffer(char* buffer)
+{
+    for(int i=0; i<BUFFER_SIZE; ++i)
     {
-        numOfLines = 0;
-        std::string unused;
-        while ( std::getline(inFile, unused) )
-            ++numOfLines;
+        if(buffer[i] )
+        {
+            buffer[i] = 0;
+        }
+        else
+        {
+            break;
+        }
     }
-    return (bool)numOfLines;          
 }
 
-std::vector<std::string> SQL::getLeaderboard(void) const
+#include <iostream>
+bool SQL::generateXMLfile(const char* filename, std::vector<std::string>& fileContent)
+{
+    {
+        std::vector<std::string> names, levels, points;
+        {
+            auto ldb = SQL_pimpl->getLeaderboard();
+            if(!ldb.size() )
+            {
+                return false;
+            }
+            names = ldb[0];
+            levels = ldb[1];
+            points = ldb[2];
+        }
+        TiXmlDocument doc; 
+        doc.LinkEndChild( new TiXmlDeclaration("1.0", "", "") );
+            
+        TiXmlElement * root = new TiXmlElement( "Leaderboard" );
+        for(unsigned int i=0; i<names.size(); ++i)
+        {
+            TiXmlElement * child = new TiXmlElement( "Player" );  
+        
+            child->SetAttribute("name", names[i] );
+            child->SetAttribute("level", levels[i] );
+            child->SetAttribute("points", points[i] );
+            root->LinkEndChild(std::move(child) );
+        }
+        doc.LinkEndChild(std::move(root) );
+        doc.SaveFile( filename ); 
+    }
+
+    fileContent.clear();
+    std::ifstream inFile(filename);
+    std::string line;
+    while(std::getline(inFile, line) )
+    {
+        line += '\n';
+        std::cout << "line: " << line;
+        fileContent.push_back(line);
+        line.clear();
+    }
+    return (fileContent.size() > 0) ? true : false;          
+}
+
+std::vector<std::vector<std::string>> SQL::getLeaderboard(void) const
 {
     return SQL_pimpl->getLeaderboard();
 }

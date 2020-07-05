@@ -10,8 +10,6 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-//import org.w3c.dom.Attr;
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;

@@ -1,0 +1,9 @@
+--Server:
++use observer pattern between SQL and Server classes
+
++msg structure:
+++when client sends to server msg:
+1."SIGN_IN\nNICKNAMEorMAIL\nPASSWORD\n"
+2."SIGN_UP\nMAIL\nNICKNAME\nPASSWORD\n"
+...
+
