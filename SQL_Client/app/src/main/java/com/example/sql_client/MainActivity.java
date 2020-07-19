@@ -8,6 +8,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.sql_client.tcp_socket_pkg.ClientSocket;
+import com.example.sql_client.tcp_socket_pkg.activites_pkg.SignInActivity;
+import com.example.sql_client.tcp_socket_pkg.activites_pkg.SignUpActivity;
+
 public class MainActivity extends AppCompatActivity
 {
     private TextView textView;

@@ -1,22 +1,16 @@
-package com.example.sql_client;
+package com.example.sql_client.tcp_socket_pkg;
 
-import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
-
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -31,7 +25,7 @@ public class ClientSocket
     final private int SRV_PORT = 8080;
     static private volatile boolean connected = false, file_received = false;
     public volatile boolean Exception_happened = false;
-    final private String LDB_Command = "GET_LDB\n", FILE_NAME = "test.txt";
+    final private String LDB_Command = "GET_LDB\n", FILE_NAME = "leaderboard.xml";
 
     public ClientSocket()
     {
@@ -137,40 +131,51 @@ public class ClientSocket
         @Override
         public void run()
         {
-            FileOutputStream fos = null;
-            try
+            ClientSocket.this.rcvMsg = null;
+            new Thread(new StringTransmission() ).start();
+            while(null == ClientSocket.this.rcvMsg );
+
+            List<String> list = new ArrayList<>();
+
+            if(ClientSocket.this.rcvMsg.contentEquals("UP_TO_DATE") )
             {
-                fos = context.openFileOutput(FILE_NAME, MODE_PRIVATE);
+                ClientSocket.this.file_received = true;
+                return;
             }
-            catch (FileNotFoundException e)
+            list.add(ClientSocket.this.rcvMsg + '\n');
+
+            while (!ClientSocket.this.rcvMsg.contains("</leaderboard>"))
             {
+                try {
+                    ClientSocket.this.rcvMsg = bufferedReader.readLine();
+                    list.add(ClientSocket.this.rcvMsg + '\n');
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    ClientSocket.this.connected = false;
+                    ClientSocket.this.Exception_happened = true;
+                    return;
+                }
+            }
+            FileOutputStream fos = null;
+            try {
+                fos = context.openFileOutput(FILE_NAME, MODE_PRIVATE);
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 ClientSocket.this.Exception_happened = true;
                 return;
             }
 
-            ClientSocket.this.rcvMsg = null;
-            new Thread(new StringTransmission() ).start();
-            while(null == ClientSocket.this.rcvMsg );
-
-            ClientSocket.this.rcvMsg.substring(0, ClientSocket.this.rcvMsg.length() - 1);
-            int LineNumbers = Integer.parseInt(ClientSocket.this.rcvMsg);
-
-            printWriter.write("OK\n");
-            printWriter.flush();
-
-            while (LineNumbers != 0) {
+            for (int i = 0; i < list.size(); i++)
+            {
                 try {
-                    ClientSocket.this.rcvMsg = bufferedReader.readLine();
-                    ClientSocket.this.rcvMsg += '\n';
-                    fos.write(ClientSocket.this.rcvMsg.getBytes() );
-                    LineNumbers--;
+                    fos.write(list.get(i).getBytes() );
                 } catch (IOException e) {
                     e.printStackTrace();
-                    ClientSocket.this.connected = false;
+                    ClientSocket.this.Exception_happened = true;
                     return;
                 }
             }
+
             if (fos != null)
             {
                 try

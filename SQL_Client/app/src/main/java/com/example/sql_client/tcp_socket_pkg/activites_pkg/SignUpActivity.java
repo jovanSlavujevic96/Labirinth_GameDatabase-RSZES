@@ -1,4 +1,4 @@
-package com.example.sql_client;
+package com.example.sql_client.tcp_socket_pkg.activites_pkg;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,6 +10,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.sql_client.R;
+import com.example.sql_client.game_pkg.activities_pkg.GameMenu;
+import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 
 public class SignUpActivity extends AppCompatActivity
 {

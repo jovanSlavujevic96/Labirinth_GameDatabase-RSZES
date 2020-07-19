@@ -1,0 +1,1 @@
+g++ -o generator Generator.cpp -ltinyxml

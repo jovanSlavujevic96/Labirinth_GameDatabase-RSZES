@@ -21,6 +21,7 @@
         "vector": "cpp",
         "exception": "cpp",
         "algorithm": "cpp",
+        "map": "cpp",
         "memory": "cpp",
         "memory_resource": "cpp",
         "optional": "cpp",
@@ -44,7 +45,6 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "thread": "cpp",
-        "typeinfo": "cpp",
-        "map": "cpp"
+        "typeinfo": "cpp"
     }
 }

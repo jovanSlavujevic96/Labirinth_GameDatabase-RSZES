@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<leaderboard>
+    <player points="320">
+        <name>Jovan</name>
+        <level>4</level>
+    </player>
+    <player points="270">
+        <name>Stevan</name>
+        <level>3</level>
+    </player>
+    <player points="320">
+        <name>Jovan</name>
+        <level>4</level>
+    </player>
+    <player points="270">
+        <name>Stevan</name>
+        <level>3</level>
+    </player>
+    <player points="320">
+        <name>Jovan</name>
+        <level>4</level>
+    </player>
+    <player points="270">
+        <name>Stevan</name>
+        <level>3</level>
+    </player>
+    <player points="320">
+        <name>Jovan</name>
+        <level>4</level>
+    </player>
+    <player points="270">
+        <name>Stevan</name>
+        <level>3</level>
+    </player>
+</leaderboard>

@@ -1,16 +1,16 @@
-package com.example.sql_client;
+package com.example.sql_client.game_pkg.activities_pkg;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
+import com.example.sql_client.xml_parser_pkg.activities_pkg.Leaderboard;
+import com.example.sql_client.R;
+import com.example.sql_client.game_pkg.GameView;
+import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 
 public class GameMenu extends AppCompatActivity {
     private GameView gameView;

@@ -1,4 +1,4 @@
-package com.example.sql_client;
+package com.example.sql_client.game_pkg;
 
 import android.content.Context;
 import android.graphics.Canvas;

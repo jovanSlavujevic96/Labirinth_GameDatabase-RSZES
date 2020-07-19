@@ -1,1 +1,1 @@
-g++ -fPIC -pthread --shared --std=c++17 -g -Wall -Wextra src/sql.cpp -o lib/libsql.so
+g++ -fPIC -pthread --shared --std=c++17 -g -Wall -Wextra src/SQL.cpp -o lib/libSQL.so

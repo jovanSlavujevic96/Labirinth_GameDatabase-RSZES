@@ -14,11 +14,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Leaderboard"></activity>
-        <activity android:name=".GameActivity" />
-        <activity android:name=".GameMenu" />
-        <activity android:name=".SignInActivity" />
-        <activity android:name=".SignUpActivity" />
+        <activity android:name=".xml_parser_pkg.activities_pkg.Leaderboard"></activity>
+        <activity android:name=".game_pkg.activities_pkg.GameActivity" />
+        <activity android:name=".game_pkg.activities_pkg.GameMenu" />
+        <activity android:name=".tcp_socket_pkg.activites_pkg.SignInActivity" />
+        <activity android:name=".tcp_socket_pkg.activites_pkg.SignUpActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

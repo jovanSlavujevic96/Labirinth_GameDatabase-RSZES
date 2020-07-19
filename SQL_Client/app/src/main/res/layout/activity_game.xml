@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".GameActivity">
+    tools:context=".game_pkg.activities_pkg.GameActivity">
 
     <view
         android:id="@+id/view"
-        class="com.example.sql_client.GameView"
+        class="com.example.sql_client.game_pkg.GameView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
