@@ -21,11 +21,11 @@ public class ClientSocket
     static private PrintWriter printWriter = null;
     static private BufferedReader bufferedReader = null;
     static private volatile String rcvMsg = null, sndMsg = null;
-    final private String SRV_IP = "192.168.0.200";
-    final private int SRV_PORT = 8080;
+    static final private String SRV_IP = "192.168.0.200";
+    static final private int SRV_PORT = 8080;
     static private volatile boolean connected = false, file_received = false;
     public volatile boolean Exception_happened = false;
-    final private String LDB_Command = "GET_LDB\n", FILE_NAME = "leaderboard.xml";
+    static final private String LDB_Command = "GET_LDB\n", FILE_NAME = "leaderboard.xml";
 
     public ClientSocket()
     {

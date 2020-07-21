@@ -8,14 +8,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.sql_client.game_pkg.Player;
+import com.example.sql_client.game_pkg.activities_pkg.GameMenu;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 import com.example.sql_client.tcp_socket_pkg.activites_pkg.SignInActivity;
 import com.example.sql_client.tcp_socket_pkg.activites_pkg.SignUpActivity;
 
 public class MainActivity extends AppCompatActivity
 {
-    private TextView textView;
-    private Button button;
+    private TextView signIn;
+    private Button signUp, playOffline;
+    private Player player = null;
 
     private static ClientSocket clientSocket = null;
 
@@ -30,10 +33,13 @@ public class MainActivity extends AppCompatActivity
             clientSocket = new ClientSocket();
         }
 
-        textView = (TextView)findViewById(R.id.sigin);
-        button = (Button)findViewById(R.id.signup);
+        player = new Player();
 
-        button.setOnClickListener(new View.OnClickListener() {
+        signIn = (TextView)findViewById(R.id.sigin);
+        signUp = (Button)findViewById(R.id.signup);
+        playOffline = (Button)findViewById(R.id.play_offline);
+
+        signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
@@ -42,12 +48,22 @@ public class MainActivity extends AppCompatActivity
             }
         } );
 
-        textView.setOnClickListener(new View.OnClickListener() {
+        signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
                 Intent intent = new Intent(MainActivity.this, SignInActivity.class);
                 startActivity(intent);   
+            }
+        } );
+
+        playOffline.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                player.setOffline(true);
+                Intent intent = new Intent(MainActivity.this, GameMenu.class);
+                startActivity(intent);
             }
         } );
 

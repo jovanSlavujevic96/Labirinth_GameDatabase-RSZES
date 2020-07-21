@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.sql_client.R;
+import com.example.sql_client.game_pkg.Player;
 import com.example.sql_client.game_pkg.activities_pkg.GameMenu;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 
@@ -22,6 +23,7 @@ public class SignInActivity extends AppCompatActivity
     private TextView textView;
     private static ClientSocket clientSocket = null;
     private static AlertDialog.Builder dlgAlert = null;
+    private static Player player = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -33,8 +35,10 @@ public class SignInActivity extends AppCompatActivity
             clientSocket = new ClientSocket();
         }
 
-        if(null == dlgAlert)
+        if(null == dlgAlert && null == player)
         {
+            player = new Player();
+
             dlgAlert = new AlertDialog.Builder(this);
             dlgAlert.setTitle("Error Message...");
             dlgAlert.setPositiveButton("OK", null);
@@ -87,6 +91,22 @@ public class SignInActivity extends AppCompatActivity
                 }
                 else if(msgFromSrv.contentEquals("OK") )
                 {
+                    player.setOffline(false);
+                    boolean isEmail = false;
+                    for(char ch : name_mail.toCharArray() )
+                    {
+                        if('@' == ch )
+                        {
+                            isEmail = true;
+                            player.setEmail(name_mail);
+                            break;
+                        }
+                    }
+                    if(!isEmail)
+                    {
+                        player.setNickname(name_mail);
+                    }
+
                     Intent intent = new Intent(SignInActivity.this, GameMenu.class);
                     startActivity(intent);
                 }

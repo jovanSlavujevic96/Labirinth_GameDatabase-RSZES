@@ -10,6 +10,8 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import com.example.sql_client.game_pkg.activities_pkg.GameActivity;
+
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
@@ -28,6 +30,9 @@ public class GameView extends View
     private float cellSize, hMargin, vMargin;
     private Paint wallPaint, playerPaint, exitPaint;
     private Random random;
+    static private Player Player = null;
+    static final private int TMAX = 4*60/*sec*/, TMIN = 1*60/*sec*/;
+    private GameActivity gameActivity = null;
 
     public GameView(Context context, @Nullable AttributeSet attrs )
     {
@@ -44,9 +49,21 @@ public class GameView extends View
 
 
         random = new Random();
-//        createMaze(true);
+
+        if(null == Player)
+        {
+            Player = new Player();
+        }
+        Player.m_TmpLevel = 0;
+        Player.m_TmpPoints = 0;
 
     }
+
+    public void setGameActivity(GameActivity gameActivity)
+    {
+        this.gameActivity = gameActivity;
+    }
+
 
     private Cell getNeighbour(Cell cell)
     {
@@ -250,8 +267,17 @@ public class GameView extends View
 
     private void checkExit()
     {
-        if(player == exit)
-            createMaze(true);
+        if (player == exit) {
+            boolean includePlayer = false;
+            Player.m_TmpLevel++;
+            if(Player.m_TmpLevel < 5) {
+                includePlayer = true;
+            }
+            createMaze(includePlayer);
+            float timePerc = ((float)TMAX-(float)Player.getElapsedTime() ) / ((float)TMAX-(float)TMIN);
+            Player.m_TmpPoints = (int)(timePerc*(float)(Player.m_TmpLevel*100));
+            Player.setRecord(Player.m_TmpLevel, Player.m_TmpPoints);
+        }
     }
 
     @Override

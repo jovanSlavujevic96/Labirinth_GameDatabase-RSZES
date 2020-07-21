@@ -42,15 +42,13 @@ public class Leaderboard extends AppCompatActivity
                 {
                     sb.append(String.valueOf(i+1)+". ").append(xmlParser.getListNames().get(i) ).
                             append(' ').append(xmlParser.getListLevels().get(i) ).
-                            append(' ').append(xmlParser.getListLevels().get(i) ).append('\n');
+                            append(' ').append(xmlParser.getListPoints().get(i) ).append('\n');
                 }
                 mEditText.setText(sb.toString());
             }
         }catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally{
+        }  finally{
             if (fis != null){
                 try {
                     fis.close();
