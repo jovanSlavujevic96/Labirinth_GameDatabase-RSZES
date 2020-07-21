@@ -77,6 +77,7 @@ public:
     bool change_players_name(const std::string& player_mail, const std::string& new_username);
     bool change_players_password(const std::string& player_mail, const std::string& new_password);
     bool change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level);
+    std::vector<std::string> getPlayerData(const char* data, const char* typeOfData);
 };
 
 //private SQL_impl
@@ -406,6 +407,53 @@ bool SQL::SQL_impl::change_players_score(const std::string& player_mail, const u
     return true;
 }
 
+std::vector<std::string> SQL::SQL_impl::getPlayerData(const char* data, const char* typeOfData)
+{
+    std::vector<std::string> dataVec;
+    std::string email, nickname;
+    std::string select = "email";
+    if (!strcmp("email", typeOfData) )
+    {
+        email = data;
+        select = "nickname";
+    }
+    else if(!strcmp("nickname", typeOfData))
+    {
+        nickname = data;
+    }
+
+    MYSQL_RES* res;
+    std::string message = "SELECT " + select + ",points,level FROM players WHERE " + std::string(typeOfData) + " = \"" + std::string(data) + '"';
+    int qstate = mysql_query(m_connector, message.c_str() );
+    if(qstate)
+    {
+        //std::cout << "\nSelection request has been failed\n";
+        dataVec.push_back(err);
+        return dataVec;
+    }
+    res = mysql_store_result(m_connector);
+    if(NULL == res)
+    {
+        //std::cout << "\nStoring request has been failed\n";
+        dataVec.push_back(err);
+        return dataVec;
+    }
+    MYSQL_ROW row = mysql_fetch_row(res);
+    if (!strcmp("email", typeOfData) )
+    {
+        nickname = row[0];
+    }
+    else if(!strcmp("nickname", typeOfData))
+    {
+        email = row[0];
+    }
+    dataVec.push_back(email);
+    dataVec.push_back(nickname);
+    dataVec.push_back(row[1]);
+    dataVec.push_back(row[2]);
+    return dataVec;
+}
+
 void SQL::SQL_impl::attach(IObserver *observer)
 {
     m_observers.push_back(observer);
@@ -568,6 +616,41 @@ std::string SQL::change_players_score(const std::string& player_mail, const uint
         return errBMail;
     }
     return (true == SQL_pimpl->change_players_score(player_mail, points, passed_level)) ? ok : errSrv ;
+}
+
+std::string SQL::getPlayerData(const std::string& player_username_mail)
+{
+    std::string data_type = "nickname";
+    for(const auto& letter: player_username_mail)
+    {
+        if('@' == letter)
+        {
+            data_type = "email";
+            break;
+        }
+    }
+
+    auto check = SQL_pimpl->check_existance(player_username_mail.c_str(), data_type.c_str() );
+    if(SQL_enum_handler::checkRow_st::Error == check) 
+    {
+        return errSrv;
+    }
+
+    const auto playerData = SQL_pimpl->getPlayerData(player_username_mail.c_str(), data_type.c_str() );
+    if(errSrv == playerData[0] )
+    {
+        return errSrv;
+    }
+    std::string playerDataString = "";
+    for(uint8_t i=0; i<playerData.size(); ++i)
+    {   
+        playerDataString += playerData[i];
+        if(i != playerData.size()-1 )
+        {
+            playerDataString += ';';
+        }
+    }
+    return playerDataString;
 }
 
 void SQL::attach(IObserver *observer) 

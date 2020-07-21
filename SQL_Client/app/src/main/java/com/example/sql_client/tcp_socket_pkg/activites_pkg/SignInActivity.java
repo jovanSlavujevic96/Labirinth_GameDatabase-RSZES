@@ -71,8 +71,8 @@ public class SignInActivity extends AppCompatActivity
                 final String name_mail = email_nicknameEditText.getText().toString(),
                         password = passwordEditText.getText().toString();
 
-                final String msgToSrv = "SIGN_IN\n" + name_mail + '\n' + password;
-                final String msgFromSrv = clientSocket.TransmitString(msgToSrv);
+                String msgToSrv = "SIGN_IN\n" + name_mail + '\n' + password;
+                String msgFromSrv = clientSocket.TransmitString(msgToSrv);
 
                 if(msgFromSrv.contentEquals("ERR_BAD_NAME"))
                 {
@@ -92,20 +92,16 @@ public class SignInActivity extends AppCompatActivity
                 else if(msgFromSrv.contentEquals("OK") )
                 {
                     player.setOffline(false);
-                    boolean isEmail = false;
-                    for(char ch : name_mail.toCharArray() )
-                    {
-                        if('@' == ch )
-                        {
-                            isEmail = true;
-                            player.setEmail(name_mail);
-                            break;
-                        }
-                    }
-                    if(!isEmail)
-                    {
-                        player.setNickname(name_mail);
-                    }
+
+                    msgToSrv = "GET_INFO\n" + name_mail;
+                    msgFromSrv = clientSocket.TransmitString(msgToSrv);
+
+                    String[] infos = msgFromSrv.split(";");
+                    player.setEmail(infos[0]);
+                    player.setNickname(infos[1]);
+                    int points = Integer.parseInt(infos[2]);
+                    int level = Integer.parseInt(infos[3]);
+                    player.setRecord(level, points);
 
                     Intent intent = new Intent(SignInActivity.this, GameMenu.class);
                     startActivity(intent);

@@ -4,20 +4,12 @@
         <name>marko</name>
         <level>0</level>
     </player>
-    <player points="0">
+    <player points="200">
         <name>vujsla</name>
-        <level>0</level>
+        <level>2</level>
     </player>
     <player points="0">
         <name>mikica</name>
-        <level>0</level>
-    </player>
-    <player points="0">
-        <name>steva</name>
-        <level>0</level>
-    </player>
-    <player points="0">
-        <name>violeta96</name>
         <level>0</level>
     </player>
 </leaderboard>

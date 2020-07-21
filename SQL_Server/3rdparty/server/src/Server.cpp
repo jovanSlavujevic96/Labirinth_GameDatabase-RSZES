@@ -301,6 +301,16 @@ std::string Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& 
     {
         return m_sqlPtr->change_players_name(parameters[1], parameters[2], parameters[3]);
     }
+    else if(parameters[0] == "GET_INFO" && parameters.size() >= 2 && signed_up)
+    {
+        return m_sqlPtr->getPlayerData(parameters[1] );
+    }
+    else if(parameters[0] == "UPDATE_SCORE" && parameters.size() >= 4 && signed_up)
+    {
+        return m_sqlPtr->change_players_score(parameters[1],
+            static_cast<uint16_t>(std::stoi(parameters[2])),
+            static_cast<uint8_t>(std::stoi(parameters[3])) );
+    }
     return "ERR";
 }
 

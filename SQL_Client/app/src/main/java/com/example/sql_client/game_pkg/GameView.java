@@ -24,19 +24,26 @@ public class GameView extends View
     };
 
     private Cell[][] cells;
-    private Cell player, exit;
+    private Cell exit;
+    volatile private Cell player = null;
     private static final int COLS = 7, ROWS = 10;
     private static final float WALL_THICKNESS = 4;
     private float cellSize, hMargin, vMargin;
     private Paint wallPaint, playerPaint, exitPaint;
     private Random random;
     static private Player Player = null;
-    static final private int TMAX = 4*60/*sec*/, TMIN = 1*60/*sec*/;
+    static final private int TMAX = (int)(0.5*60)/*sec*/, TMIN =(int)(0.25*60) /*sec*/;
+    static final private int LEVELmax = 5;
     private GameActivity gameActivity = null;
+    private Thread TimeElpaseTH = null;
+    private volatile boolean timerInterrupter;
 
     public GameView(Context context, @Nullable AttributeSet attrs )
     {
         super(context, attrs);
+
+        timerInterrupter = false;
+
         wallPaint = new Paint();
         wallPaint.setColor(Color.BLACK);
         wallPaint.setStrokeWidth(WALL_THICKNESS);
@@ -47,23 +54,27 @@ public class GameView extends View
         exitPaint = new Paint();
         exitPaint.setColor(Color.RED);
 
-
         random = new Random();
 
         if(null == Player)
         {
             Player = new Player();
         }
-        Player.m_TmpLevel = 0;
-        Player.m_TmpPoints = 0;
+        Player.resetTmpScore();
 
+    }
+
+    private class TimeElapse implements Runnable {
+        public void run() {
+            while (TMAX != gameActivity.getSecondsFromDurationString());
+            gameActivity.createPopUp("Time Elapsed..",Player.getTmpLevel(), Player.getTmpPoints() );
+        }
     }
 
     public void setGameActivity(GameActivity gameActivity)
     {
         this.gameActivity = gameActivity;
     }
-
 
     private Cell getNeighbour(Cell cell)
     {
@@ -122,11 +133,18 @@ public class GameView extends View
 
     public void createMaze(boolean includePlayer)
     {
+        if(true == includePlayer && null == TimeElpaseTH)
+        {
+            TimeElpaseTH = new Thread(new TimeElapse() );
+            TimeElpaseTH.start();
+        }
+
         Stack<Cell> stack = new Stack<>();
         Cell current, next;
 
-        cells = new Cell[COLS][ROWS];
-
+        if(false == timerInterrupter) {
+            cells = new Cell[COLS][ROWS];
+        }
         for(int x=0; x<COLS; x++)
         {
             for(int y=0; y<ROWS; y++)
@@ -135,8 +153,12 @@ public class GameView extends View
             }
         }
 
-        if(includePlayer) {
+        if(true == includePlayer) {
             player = cells[0][0];
+        }
+        else
+        {
+            player = null;
         }
         exit = cells[COLS-1][ROWS-1];
 
@@ -237,52 +259,73 @@ public class GameView extends View
 
     private void movePlayer(Direction direction)
     {
-        if(player != null) {
-            switch (direction) {
-                case UP:
-                    if (!player.topWall)
-                        player = cells[player.col][player.row - 1];
-                    break;
-
-                case DOWN:
-                    if (!player.bottomWall)
-                        player = cells[player.col][player.row + 1];
-                    break;
-
-                case LEFT:
-                    if (!player.leftWall)
-                        player = cells[player.col - 1][player.row];
-                    break;
-
-                case RIGHT:
-                    if (!player.rightWall)
-                        player = cells[player.col + 1][player.row];
-                    break;
-            }
-
-            checkExit();
-            invalidate();
+        if(null == player)
+        {
+            return;
         }
+        switch (direction) {
+            case UP:
+                if (!player.topWall)
+                    player = cells[player.col][player.row - 1];
+                break;
+
+            case DOWN:
+                if (!player.bottomWall)
+                    player = cells[player.col][player.row + 1];
+                break;
+
+            case LEFT:
+                if (!player.leftWall)
+                    player = cells[player.col - 1][player.row];
+                break;
+
+            case RIGHT:
+                if (!player.rightWall)
+                    player = cells[player.col + 1][player.row];
+                break;
+        }
+        checkExit();
+        invalidate();
+
     }
 
     private void checkExit()
     {
+        if(null == player)
+        {
+            return;
+        }
         if (player == exit) {
             boolean includePlayer = false;
-            Player.m_TmpLevel++;
-            if(Player.m_TmpLevel < 5) {
+            final int level = Player.getTmpLevel()+1;
+            if(level < LEVELmax) {
                 includePlayer = true;
             }
+            float timePerc = (float)(TMAX-gameActivity.getSecondsFromDurationString() ) / (float)(TMAX-TMIN);
+            final int points = (int)(timePerc*(float)(level*100));
+            Player.setRecord(level, points);
+            int incr=1;
+            if(!includePlayer)
+            {
+                incr=0;
+            }
+            final String result = "Level: " + String.valueOf(Player.getTmpLevel()+incr) + "\tPoints: " + String.valueOf(Player.getTmpPoints() );
+            gameActivity.streamResult(result);
+            player = null;
             createMaze(includePlayer);
-            float timePerc = ((float)TMAX-(float)Player.getElapsedTime() ) / ((float)TMAX-(float)TMIN);
-            Player.m_TmpPoints = (int)(timePerc*(float)(Player.m_TmpLevel*100));
-            Player.setRecord(Player.m_TmpLevel, Player.m_TmpPoints);
+            if(!includePlayer) {
+                gameActivity.createPopUp("Game finished...", Player.getTmpLevel(), Player.getTmpPoints());
+            }
         }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
+        if(null == player)
+        {
+            return true;
+        }
         if(event.getAction() == MotionEvent.ACTION_DOWN)
             return true;
 
@@ -330,11 +373,11 @@ public class GameView extends View
 
     private class Cell{
         boolean
-                topWall = true,
-                leftWall = true,
-                bottomWall = true,
-                rightWall = true,
-                visited = false;
+            topWall = true,
+            leftWall = true,
+            bottomWall = true,
+            rightWall = true,
+            visited = false;
 
         int col, row;
 
