@@ -359,6 +359,7 @@ void Server::Socket::clientCommunication()
             if(true == m_upToDate)
             {
                 msg = "UP_TO_DATE\n";
+                std::cout << "sent: " << msg;
                 if( send(m_socketValue, msg.c_str(), msg.length(), 0) <= 0)
                 {
                     break;
@@ -375,6 +376,8 @@ void Server::Socket::clientCommunication()
                     break;
                 }
             }
+
+            std::cout << "FILE SENT\n";
             m_upToDate = true;
             continue;    
         }

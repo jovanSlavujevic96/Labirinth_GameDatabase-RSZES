@@ -27,6 +27,11 @@ public class ClientSocket
     public volatile boolean Exception_happened = false;
     static final private String LDB_Command = "GET_LDB\n", FILE_NAME = "leaderboard.xml";
 
+    public String getFileName()
+    {
+        return FILE_NAME;
+    }
+
     public ClientSocket()
     {
         if(null == Thread1)
