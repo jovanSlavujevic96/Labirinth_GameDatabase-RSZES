@@ -1,15 +1,6 @@
 <?xml version="1.0" ?>
 <leaderboard>
-    <player points="0">
-        <name>marko</name>
-        <level>0</level>
-    </player>
-    <player points="200">
-        <name>vujsla</name>
-        <level>2</level>
-    </player>
-    <player points="0">
-        <name>mikica</name>
-        <level>0</level>
-    </player>
+    <player points="200" name="vujsla" level="2" />
+    <player points="0" name="marko" level="0" />
+    <player points="0" name="mikica" level="0" />
 </leaderboard>

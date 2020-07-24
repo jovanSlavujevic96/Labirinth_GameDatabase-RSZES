@@ -171,16 +171,17 @@ void SQL::SQL_impl::pingSQL(void)
 void SQL::SQL_impl::updateLeaderboard(bool& notify)
 {
     MYSQL_RES* res;
-    int qstate = mysql_query(m_connector, "SELECT nickname, points, level FROM players");
+    const char* command = "SELECT nickname, level, points FROM players ORDER BY points DESC LIMIT 3";
+    int qstate = mysql_query(m_connector, command);
     if(qstate)
     {
-        //std::cout << "\nSelection request has been failed\n";
+        std::cout << "\nSelection request has been failed\n";
         return;
     }
     res = mysql_store_result(m_connector);
     if(NULL == res)
     {
-        //std::cout << "\nStoring request has been failed\n";
+        std::cout << "\nStoring request has been failed\n";
         return;
     }
     MYSQL_ROW row = mysql_fetch_row(res);
@@ -191,19 +192,19 @@ void SQL::SQL_impl::updateLeaderboard(bool& notify)
         if(incr == m_ldbName.size() )
         {
             m_ldbName.push_back(row[0] );
-            m_ldbPoints.push_back(row[1] );
-            m_ldbLevel.push_back(row[2] );
+            m_ldbPoints.push_back(row[2] );
+            m_ldbLevel.push_back(row[1] );
             notify = true;
         }
         else //incr < m_ldbName.size()
         {
             if( strcmp(m_ldbName[incr].c_str(), row[0]) ||
-                strcmp(m_ldbPoints[incr].c_str(), row[1]) ||
-                strcmp(m_ldbLevel[incr].c_str(), row[2]) ) 
+                strcmp(m_ldbPoints[incr].c_str(), row[2]) ||
+                strcmp(m_ldbLevel[incr].c_str(), row[1]) ) 
             {
                 m_ldbName[incr] = row[0];
-                m_ldbPoints[incr] = row[1];
-                m_ldbLevel[incr] = row[2];
+                m_ldbPoints[incr] = row[2];
+                m_ldbLevel[incr] = row[1];
                 notify = true;
             }
         }
@@ -229,18 +230,17 @@ bool SQL::SQL_impl::generateXML(void)
     {
         TiXmlElement * child = new TiXmlElement( "player" );  
         child->SetAttribute("points", m_ldbPoints[i] );
-        {
+        child->SetAttribute("name", m_ldbName[i] );
+        child->SetAttribute("level", m_ldbLevel[i] );
+        
+        /* //element instead of attribute
+        {   
             TiXmlElement * element = new TiXmlElement( "name" );
             TiXmlText * text = new TiXmlText( m_ldbName[i] );
 	        element->LinkEndChild( text );
             child->LinkEndChild(std::move(element) );
         }
-        {
-            TiXmlElement * element = new TiXmlElement( "level" );
-            TiXmlText * text = new TiXmlText( m_ldbLevel[i] );
-	        element->LinkEndChild( text );
-            child->LinkEndChild(std::move(element) );
-        }
+        */
         root->LinkEndChild(std::move(child) );
     }
     doc.LinkEndChild(std::move(root) );
