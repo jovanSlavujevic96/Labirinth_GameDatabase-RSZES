@@ -1,12 +1,21 @@
 package com.example.sql_client.xml_parser_pkg;
 
+import android.content.Context;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class XMLParser
 {
@@ -38,11 +47,31 @@ public class XMLParser
         }
     }
 
-    public boolean DoParsing(Document document)
+    public boolean DoParsing(Context context, String fileName)
     {
-        if(null == document)
+        if(null == context || null == fileName)
         {
             return false;
+        }
+        FileInputStream fileInputStream = null;
+        try {
+            fileInputStream = context.openFileInput(fileName);
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
+        InputStream inputStream = new BufferedInputStream(fileInputStream);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = null;
+        Document document = null;
+        try{
+            db = factory.newDocumentBuilder();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        try{
+            document = db.parse(inputStream);
+        }catch (Exception e){
+            e.printStackTrace();
         }
         document.getDocumentElement().normalize();
         NodeList nList = document.getElementsByTagName("player");
@@ -61,6 +90,12 @@ public class XMLParser
                 listNames.add(eElement.getAttribute("name") );
                 listLevels.add(eElement.getAttribute("level") );
             }
+        }
+
+        try {
+            inputStream.close();
+        }catch (Exception e){
+            e.printStackTrace();
         }
         return true;
     }

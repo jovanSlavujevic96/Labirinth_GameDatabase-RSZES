@@ -297,8 +297,13 @@ std::string Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& 
     {
         return m_sqlPtr->change_players_password(parameters[1], parameters[2], parameters[3]);
     }
+    else if(parameters[0] == "CHANGE_MAIL" && parameters.size() >= 4 && signed_up)
+    {
+        return m_sqlPtr->change_players_email(parameters[1], parameters[2], parameters[3]);
+    }
     else if(parameters[0] == "CHANGE_NAME" && parameters.size() >= 4 && signed_up)
     {
+        std::cout << "parameters: " << parameters[1] << ' ' << parameters[2] << ' ' << parameters[3] << '\n';
         return m_sqlPtr->change_players_name(parameters[1], parameters[2], parameters[3]);
     }
     else if(parameters[0] == "GET_INFO" && parameters.size() >= 2 && signed_up)
@@ -371,6 +376,7 @@ void Server::Socket::clientCommunication()
 
             for(const auto& file_buff : m_server->getFileContent() ) 
             {
+                std::cout << file_buff;
                 if( send(m_socketValue, file_buff.c_str(), file_buff.length(), 0) <= 0)
                 {
                     break;
@@ -381,7 +387,6 @@ void Server::Socket::clientCommunication()
             m_upToDate = true;
             continue;    
         }
-        
         msg = m_server->chooseSQLaction(params, signed_up) + '\n';
         if( send(m_socketValue, msg.c_str(), msg.length(), 0) <= 0)
         {

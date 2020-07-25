@@ -22,4 +22,7 @@
     <string name="start_game">START GAME</string>
     <string name="go_to_leaderboard">Go to Leaderboard</string>
     <string name="play_offline">PLAY OFFLINE</string>
+    <string name="load">LOAD</string>
+    <string name="leaderboard">LEADERBOARD</string>
+    <string name="settings">Settings</string>
 </resources>

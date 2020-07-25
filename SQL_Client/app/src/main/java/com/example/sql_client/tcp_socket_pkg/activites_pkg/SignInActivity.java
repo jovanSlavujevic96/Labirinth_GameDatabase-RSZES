@@ -1,7 +1,6 @@
 package com.example.sql_client.tcp_socket_pkg.activites_pkg;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,19 +10,25 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.sql_client.MainActivity;
+import com.example.sql_client.game_pkg.activities_pkg.GameActivity;
+import com.example.sql_client.pop_up.ActivityInterface;
 import com.example.sql_client.R;
 import com.example.sql_client.game_pkg.Player;
 import com.example.sql_client.game_pkg.activities_pkg.GameMenu;
+import com.example.sql_client.pop_up.PopUpHandler;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 
-public class SignInActivity extends AppCompatActivity
+public class SignInActivity extends ActivityInterface
 {
     private Button signinButton;
     private EditText email_nicknameEditText, passwordEditText;
     private TextView textView;
-    private static ClientSocket clientSocket = null;
-    private static AlertDialog.Builder dlgAlert = null;
-    private static Player player = null;
+
+    static private DialogInterface.OnClickListener Listener = null;
+
+    @Override
+    public void ActivityPopUpHandling(int PopUpType) { }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -31,24 +36,17 @@ public class SignInActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        if(null == clientSocket) {
-            clientSocket = new ClientSocket();
-        }
+        ClientSocket.setActivityInterface(this);
 
-        if(null == dlgAlert && null == player)
-        {
-            player = new Player();
-
-            dlgAlert = new AlertDialog.Builder(this);
-            dlgAlert.setTitle("Error Message...");
-            dlgAlert.setPositiveButton("OK", null);
-            dlgAlert.setCancelable(true);
-            dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        if(null == Listener) {
+            Listener =  new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-
+                    ClientSocket.ConnectWithServer();
+                    Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                    startActivity(intent);
                 }
-            });
+            };
         }
 
         signinButton = findViewById(R.id.signin);
@@ -65,49 +63,51 @@ public class SignInActivity extends AppCompatActivity
             }
         } );
 
-        signinButton.setOnClickListener(new View.OnClickListener() {
+        signinButton.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
-                final String name_mail = email_nicknameEditText.getText().toString(),
-                        password = passwordEditText.getText().toString();
-
-                String msgToSrv = "SIGN_IN\n" + name_mail + '\n' + password;
-                String msgFromSrv = clientSocket.TransmitString(msgToSrv);
-
-                if(msgFromSrv.contentEquals("ERR_BAD_NAME"))
+            public void onClick(View v)
+            {
+                
+                if(!ClientSocket.isConnected() )
                 {
-                    dlgAlert.setMessage("This username doesn't exist!");
-                    dlgAlert.create().show();
+                    PopUpHandler.PopUp(ActivityInterface.current_context, -1, "Error Message...", "You can't sign in.\nYou are not connected to the server.\nWe are trying to reconnect.", Listener);
+                    return;
                 }
-                else if(msgFromSrv.contentEquals("ERR_BAD_PASS"))
-                {
-                    dlgAlert.setMessage("Wrong password!");
-                    dlgAlert.create().show();
-                }
-                else if(msgFromSrv.contentEquals("ERR_BAD_MAIL"))
-                {
-                    dlgAlert.setMessage("This email doesn't exist!");
-                    dlgAlert.create().show();
-                }
-                else if(msgFromSrv.contentEquals("OK") )
-                {
-                    player.setOffline(false);
 
-                    msgToSrv = "GET_INFO\n" + name_mail;
-                    msgFromSrv = clientSocket.TransmitString(msgToSrv);
+                String msg = "SIGN_IN\n" + email_nicknameEditText.getText().toString() + '\n'
+                        + passwordEditText.getText().toString();
+                msg = ClientSocket.TransmitString(msg);
 
-                    String[] infos = msgFromSrv.split(";");
-                    player.setEmail(infos[0]);
-                    player.setNickname(infos[1]);
-                    int points = Integer.parseInt(infos[2]);
-                    int level = Integer.parseInt(infos[3]);
-                    player.setRecord(level, points);
+                if(msg.contentEquals("OK") )
+                {
+                    Player.setOffline(false);
+
+                    msg = "GET_INFO\n" + email_nicknameEditText.getText().toString();
+                    msg = ClientSocket.TransmitString(msg);
+
+                    String[] infos = msg.split(";");
+                    Player.setEmail(infos[0]);
+                    Player.setNickname(infos[1]);
+                    Player.setRecord(Integer.parseInt(infos[3]), Integer.parseInt(infos[2]) );
 
                     Intent intent = new Intent(SignInActivity.this, GameMenu.class);
                     startActivity(intent);
+                    return;
                 }
+
+                String Text = msg;
+                if(msg.contentEquals("ERR_BAD_NAME")) {
+                    Text = "This username doesn't exist!";
+                }else if(msg.contentEquals("ERR_BAD_PASS")) {
+                    Text = "Wrong password!";
+                }else if(msg.contentEquals("ERR_BAD_MAIL")) {
+                    Text = "This email doesn't exist!";
+                }
+                PopUpHandler.PopUp(ActivityInterface.current_context, -1,
+                        "Error Message...", Text, null);
+
             }
         } );
-
     }
 }

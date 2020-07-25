@@ -9,65 +9,64 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.sql_client.MainActivity;
 import com.example.sql_client.game_pkg.Player;
+import com.example.sql_client.pop_up.ActivityInterface;
+import com.example.sql_client.pop_up.PopUpHandler;
+import com.example.sql_client.tcp_socket_pkg.activites_pkg.UserSettingsActivity;
 import com.example.sql_client.xml_parser_pkg.activities_pkg.Leaderboard;
 import com.example.sql_client.R;
 import com.example.sql_client.game_pkg.GameView;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 
-public class GameMenu extends AppCompatActivity {
+public class GameMenu extends ActivityInterface {
     private GameView gameView;
-    private Button startGame, gotoLeaderboard;
-    private static ClientSocket clientSocket = null;
-    static private Player player = null;
-    private AlertDialog.Builder dlgAlert = null;
-
+    private Button startGame, gotoLeaderboard, gotoMainMenu;
     private TextView name = null, score = null;
+    private ImageView userConfiguration;
+
+    @Override
+    public void ActivityPopUpHandling(int PopUpType) {}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_menu);
+
+        ClientSocket.setActivityInterface(this);
+
         gameView = findViewById(R.id.view);
-        gameView.createMaze(false);
-        gotoLeaderboard = (Button) findViewById(R.id.button2);
-        startGame = (Button) findViewById(R.id.button);
-
-        if(null == player) {
-            player = new Player();
-        }
-
-        if(clientSocket == null && !player.getOffline() )
-        {
-            clientSocket = new ClientSocket();
-        }
-
+        gotoLeaderboard = findViewById(R.id.button2);
+        gotoMainMenu = findViewById(R.id.button3);
+        startGame = findViewById(R.id.button);
         name = findViewById(R.id.menuPlayerName);
         score = findViewById(R.id.menuPlayerPtsAndLevel);
+        userConfiguration = findViewById(R.id.UserSettings);
 
-        String playerName = "/";
-        if(!player.getOffline() )
+        gameView.createMaze(false);
         {
-            playerName = player.getNickname();
+            String playerName = "/";
+            if (!Player.getOffline()) {
+                playerName = Player.getNickname();
+            }
+            name.setText("Name: " + playerName);
+
+            final String playerScore = "Score: " + String.valueOf(Player.getHighestLevel())
+                    + " (" + String.valueOf(Player.getHighestPoints()) + ')';
+            score.setText(playerScore);
         }
-        name.setText("Name: " + playerName);
-        final String playerScore = "Score: " + String.valueOf(player.getHighestLevel() ) + " (" + String.valueOf(player.getHighestPoints() )+ ')';
-        score.setText(playerScore);
-        name.setTextColor(Color.RED); //set red color for text view
-        score.setTextColor(Color.RED);
 
-        dlgAlert = new AlertDialog.Builder(this);
-        dlgAlert.setTitle("Error Message...");
-        dlgAlert.setPositiveButton("OK", null);
-        dlgAlert.setCancelable(true);
-        dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        gotoMainMenu.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-
+            public void onClick(View v) {
+                Intent intent = new Intent(GameMenu.this, MainActivity.class);
+                startActivity(intent);
             }
         });
+
         startGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,18 +79,25 @@ public class GameMenu extends AppCompatActivity {
         gotoLeaderboard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(true == player.getOffline() )
-                {
-                    dlgAlert.setMessage("You are offline!");
-                    dlgAlert.create().show();
+                if(true == Player.getOffline() ){
+                    PopUpHandler.PopUp(ActivityInterface.current_context, -1,
+                            "Error Message...", "You are offline!", null );
                     return;
                 }
-                if(clientSocket.TransmitFile("GET_LDB\n", getApplicationContext() ) /*|| clientSocket.Exception_happened*/)
-                {
+                if(ClientSocket.TransmitFile("GET_LDB\n" ) ) {
                     Intent intent = new Intent(GameMenu.this, Leaderboard.class);
                     startActivity(intent);
                 }
             }
         });
+
+        userConfiguration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(GameMenu.this, UserSettingsActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 }

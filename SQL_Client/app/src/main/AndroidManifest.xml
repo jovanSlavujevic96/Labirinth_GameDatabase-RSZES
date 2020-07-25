@@ -14,7 +14,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".xml_parser_pkg.activities_pkg.Leaderboard"></activity>
+        <activity android:name=".tcp_socket_pkg.activites_pkg.UserSettingsActivity"></activity>
+        <activity android:name=".xml_parser_pkg.activities_pkg.Leaderboard" />
         <activity android:name=".game_pkg.activities_pkg.GameActivity" />
         <activity android:name=".game_pkg.activities_pkg.GameMenu" />
         <activity android:name=".tcp_socket_pkg.activites_pkg.SignInActivity" />

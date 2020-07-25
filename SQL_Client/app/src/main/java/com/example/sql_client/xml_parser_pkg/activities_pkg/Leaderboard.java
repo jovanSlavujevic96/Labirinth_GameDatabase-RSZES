@@ -1,82 +1,72 @@
 package com.example.sql_client.xml_parser_pkg.activities_pkg;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.sql_client.pop_up.ActivityInterface;
 import com.example.sql_client.R;
+import com.example.sql_client.game_pkg.GameView;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 import com.example.sql_client.xml_parser_pkg.XMLParser;
 
-import org.w3c.dom.Document;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-
-public class Leaderboard extends AppCompatActivity
+public class Leaderboard extends ActivityInterface
 {
+    private GameView gameView;
+    private boolean firstLoad = true;
+
     static private  XMLParser xmlParser = null;
-    private static ClientSocket socket = null;
-    TextView textView;
+    static private ClientSocket clientSocket = null;
+    static private List<TextView> textViewList = null;
+
+    @Override
+    public void ActivityPopUpHandling(int PopUpType) {}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_leaderboard);
-        textView = findViewById(R.id.ldbTV);
 
-        if(null == socket && null == xmlParser)
+        ClientSocket.setActivityInterface(this);
+
+        gameView = findViewById(R.id.ldbGameView);
+        gameView.createMaze(false);
+
+        if(null == textViewList)
         {
+            textViewList = new ArrayList<>(3);
             xmlParser = new XMLParser();
-            socket = new ClientSocket();
+            clientSocket = new ClientSocket();
         }
+
+        textViewList.add(0, (TextView) (findViewById(R.id.ldbTV)) ); //name
+        textViewList.add(1, (TextView) (findViewById(R.id.ldbTV2)) ); //level
+        textViewList.add(2, (TextView) (findViewById(R.id.ldbTV3)) ); //points
     }
 
     public void load (View v){
-        FileInputStream fis = null;
-        try {
-            fis = openFileInput(socket.getFileName());
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-            return;
-        }
-        InputStream is = new BufferedInputStream(fis);
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db = null;
-        Document document = null;
-        try{
-            db = factory.newDocumentBuilder();
-            document = db.parse(is);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        if(!firstLoad) if(ClientSocket.TransmitFile("GET_LDB\n" ) );
 
-        if(xmlParser.DoParsing(document) )
+        if(true == xmlParser.DoParsing(getApplicationContext(), clientSocket.getFileName() ) )
         {
-            StringBuilder sb = new StringBuilder();
+            List<StringBuilder> sbList = new ArrayList<>(3);
+            for(int i=0; i<3; i++) {
+                sbList.add(i, new StringBuilder());
+            }
             for(int i=0; i<xmlParser.getListNames().size(); i++)
             {
-                sb.append(String.valueOf(i+1)+". ").append(xmlParser.getListNames().get(i) ).
-                        append(' ').append(xmlParser.getListLevels().get(i) ).
-                        append(' ').append(xmlParser.getListPoints().get(i) ).append('\n');
+                sbList.get(0).append(String.valueOf(i+1)+". ").append(xmlParser.getListNames().get(i) ).append('\n');
+                sbList.get(1).append(xmlParser.getListLevels().get(i) ).append('\n');
+                sbList.get(2).append(xmlParser.getListPoints().get(i) ).append('\n');
             }
-            textView.setText(sb.toString());
+            for(int i=0; i<3; i++)
+            {
+                textViewList.get(i).setText(sbList.get(i).toString());
+            }
         }
-
-        try {
-            fis.close();
-        }catch (Exception e){
-            e.printStackTrace();
-            return;
-        }
-
+        firstLoad = false;
     }
 }

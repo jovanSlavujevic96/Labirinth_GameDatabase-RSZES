@@ -1,16 +1,14 @@
 package com.example.sql_client.game_pkg;
 
-import android.widget.Chronometer;
-
 public class Player
 {
-    static private int m_HighestLevel, m_HighestPoints ;
+    static private int m_HighestLevel, m_HighestPoints;
     static private volatile int m_TmpLevel , m_TmpPoints ;
     static private boolean m_offline = true;
     static private String m_Email = null, m_Nickname = null;
-    static boolean alreadyInitialised = false, scoreChanged = false;
+    static private boolean scoreChanged = false;
 
-    public boolean getScoreChanged()
+    static public boolean getScoreChanged()
     {
         if(scoreChanged)
         {
@@ -20,84 +18,73 @@ public class Player
         return false;
     }
 
-    public Player()
+    static public void setEmail(String email)
     {
-        if(!alreadyInitialised) {
-            m_HighestLevel = 0;
-            m_HighestPoints = 0;
-            m_TmpLevel = 0;
-            m_TmpPoints = 0;
-        }
-        alreadyInitialised = true;
+        m_Email = email;
     }
 
-    public void setEmail(String email)
+    static public String getEmail()
     {
-        this.m_Email = email;
+        return m_Email;
     }
 
-    public String getEmail()
+    static public void setNickname(String nickname)
     {
-        return this.m_Email;
+        m_Nickname = nickname;
     }
 
-    public void setNickname(String nickname)
+    static public String getNickname()
     {
-        this.m_Nickname = nickname;
+        return m_Nickname;
     }
 
-    public String getNickname()
+    static public void setOffline(boolean offline)
     {
-        return this.m_Nickname;
+        m_offline = offline;
     }
 
-    public void setOffline(boolean offline)
+    static public boolean getOffline()
     {
-        this.m_offline = offline;
+        return m_offline;
     }
 
-    public boolean getOffline()
+    static public void resetTmpScore()
     {
-        return this.m_offline;
+        m_TmpLevel = 0;
+        m_TmpPoints = 0;
     }
 
-    public void resetTmpScore()
+    static public void setRecord(int level, int points)
     {
-        this.m_TmpLevel = 0;
-        this.m_TmpPoints = 0;
-    }
-
-    public void setRecord(int level, int points)
-    {
-        if(this.m_HighestPoints < points)
+        if(m_HighestPoints < points)
         {
-            this.m_HighestPoints = points;
-            this.m_HighestLevel = level;
+            m_HighestPoints = points;
+            m_HighestLevel = level;
             scoreChanged = true;
         }
-        this.m_TmpLevel = level;
-        this.m_TmpPoints = points;
+        m_TmpLevel = level;
+        m_TmpPoints = points;
     }
 
 
-    public int getHighestLevel()
+    static public int getHighestLevel()
     {
-        return this.m_HighestLevel;
+        return m_HighestLevel;
     }
 
-    public int getHighestPoints()
+    static public int getHighestPoints()
     {
-        return this.m_HighestPoints;
+        return m_HighestPoints;
     }
 
-    public int getTmpLevel()
+    static public int getTmpLevel()
     {
-        return this.m_TmpLevel;
+        return m_TmpLevel;
     }
 
-    public int getTmpPoints()
+    static public int getTmpPoints()
     {
-        return this.m_TmpPoints;
+        return m_TmpPoints;
     }
 
 }

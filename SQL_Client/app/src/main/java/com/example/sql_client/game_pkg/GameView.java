@@ -11,6 +11,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import com.example.sql_client.game_pkg.activities_pkg.GameActivity;
+import com.example.sql_client.pop_up.PopUpHandler;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -24,25 +25,21 @@ public class GameView extends View
     };
 
     private Cell[][] cells;
-    private Cell exit;
-    volatile private Cell player = null;
-    private static final int COLS = 7, ROWS = 10;
-    private static final float WALL_THICKNESS = 4;
+    volatile private Cell playerCell = null, exitCell = null;
+
+    static private final int COLS = 7, ROWS = 10, TMAX = (int)(0.5*60)/*sec*/, TMIN =(int)(0.25*60) /*sec*/, LEVEL_MAX = 5;
+    private static final float WALL_THICKNESS = 4.0f;
+
     private float cellSize, hMargin, vMargin;
     private Paint wallPaint, playerPaint, exitPaint;
     private Random random;
-    static private Player Player = null;
-    static final private int TMAX = (int)(0.5*60)/*sec*/, TMIN =(int)(0.25*60) /*sec*/;
-    static final private int LEVELmax = 5;
+
     private GameActivity gameActivity = null;
     private Thread TimeElpaseTH = null;
-    private volatile boolean timerInterrupter;
 
     public GameView(Context context, @Nullable AttributeSet attrs )
     {
         super(context, attrs);
-
-        timerInterrupter = false;
 
         wallPaint = new Paint();
         wallPaint.setColor(Color.BLACK);
@@ -56,18 +53,14 @@ public class GameView extends View
 
         random = new Random();
 
-        if(null == Player)
-        {
-            Player = new Player();
-        }
         Player.resetTmpScore();
-
     }
 
     private class TimeElapse implements Runnable {
         public void run() {
             while (TMAX != gameActivity.getSecondsFromDurationString());
-            gameActivity.createPopUp("Time Elapsed..",Player.getTmpLevel(), Player.getTmpPoints() );
+            final String text ="LEVEL: " + String.valueOf(Player.getTmpLevel()) + "\nPOINTS: " + String.valueOf(Player.getTmpPoints());
+            PopUpHandler.PopUp(gameActivity,0,"Time Elapsed..",text, gameActivity.getListener() );
         }
     }
 
@@ -142,9 +135,8 @@ public class GameView extends View
         Stack<Cell> stack = new Stack<>();
         Cell current, next;
 
-        if(false == timerInterrupter) {
-            cells = new Cell[COLS][ROWS];
-        }
+        cells = new Cell[COLS][ROWS];
+
         for(int x=0; x<COLS; x++)
         {
             for(int y=0; y<ROWS; y++)
@@ -154,13 +146,9 @@ public class GameView extends View
         }
 
         if(true == includePlayer) {
-            player = cells[0][0];
+            playerCell = cells[0][0];
         }
-        else
-        {
-            player = null;
-        }
-        exit = cells[COLS-1][ROWS-1];
+        exitCell = cells[COLS-1][ROWS-1];
 
         current = cells[0][0];
         current.visited = true;
@@ -238,50 +226,50 @@ public class GameView extends View
         }
 
         float margin = cellSize/10;
-        if(player != null) {
+        if(playerCell != null) {
             canvas.drawRect(
-                    player.col * cellSize + margin,
-                    player.row * cellSize + margin,
-                    (player.col + 1) * cellSize - margin,
-                    (player.row + 1) * cellSize - margin,
+                    playerCell.col * cellSize + margin,
+                    playerCell.row * cellSize + margin,
+                    (playerCell.col + 1) * cellSize - margin,
+                    (playerCell.row + 1) * cellSize - margin,
                     playerPaint
             );
         }
 
         canvas.drawRect(
-                exit.col*cellSize+margin,
-                exit.row*cellSize+margin,
-                (exit.col+1)*cellSize-margin,
-                (exit.row+1)*cellSize-margin,
+                exitCell.col*cellSize+margin,
+                exitCell.row*cellSize+margin,
+                (exitCell.col+1)*cellSize-margin,
+                (exitCell.row+1)*cellSize-margin,
                 exitPaint
         );
     }
 
     private void movePlayer(Direction direction)
     {
-        if(null == player)
+        if(null == playerCell)
         {
             return;
         }
         switch (direction) {
             case UP:
-                if (!player.topWall)
-                    player = cells[player.col][player.row - 1];
+                if (!playerCell.topWall)
+                    playerCell = cells[playerCell.col][playerCell.row - 1];
                 break;
 
             case DOWN:
-                if (!player.bottomWall)
-                    player = cells[player.col][player.row + 1];
+                if (!playerCell.bottomWall)
+                    playerCell = cells[playerCell.col][playerCell.row + 1];
                 break;
 
             case LEFT:
-                if (!player.leftWall)
-                    player = cells[player.col - 1][player.row];
+                if (!playerCell.leftWall)
+                    playerCell = cells[playerCell.col - 1][playerCell.row];
                 break;
 
             case RIGHT:
-                if (!player.rightWall)
-                    player = cells[player.col + 1][player.row];
+                if (!playerCell.rightWall)
+                    playerCell = cells[playerCell.col + 1][playerCell.row];
                 break;
         }
         checkExit();
@@ -291,30 +279,31 @@ public class GameView extends View
 
     private void checkExit()
     {
-        if(null == player)
+        if(null == playerCell)
         {
             return;
         }
-        if (player == exit) {
+        if (playerCell == exitCell) {
             boolean includePlayer = false;
             final int level = Player.getTmpLevel()+1;
-            if(level < LEVELmax) {
+            if(level < LEVEL_MAX) {
                 includePlayer = true;
             }
-            float timePerc = (float)(TMAX-gameActivity.getSecondsFromDurationString() ) / (float)(TMAX-TMIN);
+            final float timePerc = (float)(TMAX-gameActivity.getSecondsFromDurationString() ) / (float)(TMAX-TMIN);
             final int points = (int)(timePerc*(float)(level*100));
             Player.setRecord(level, points);
+
             int incr=1;
-            if(!includePlayer)
-            {
+            if(!includePlayer){
                 incr=0;
             }
+
             final String result = "Level: " + String.valueOf(Player.getTmpLevel()+incr) + "\tPoints: " + String.valueOf(Player.getTmpPoints() );
             gameActivity.streamResult(result);
-            player = null;
             createMaze(includePlayer);
             if(!includePlayer) {
-                gameActivity.createPopUp("Game finished...", Player.getTmpLevel(), Player.getTmpPoints());
+                final String text ="LEVEL: " + String.valueOf(Player.getTmpLevel()) + "\nPOINTS: " + String.valueOf(Player.getTmpPoints());
+                PopUpHandler.PopUp(gameActivity, 0, "Game finished...", text,gameActivity.getListener() );
             }
         }
     }
@@ -322,7 +311,7 @@ public class GameView extends View
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        if(null == player)
+        if(null == playerCell)
         {
             return true;
         }
@@ -334,8 +323,8 @@ public class GameView extends View
             float x = event.getX();
             float y = event.getY();
 
-            float playerCenterX = hMargin + (player.col+0.5f)*cellSize;
-            float playerCenterY = vMargin + (player.row+0.5f)*cellSize;
+            float playerCenterX = hMargin + (playerCell.col+0.5f)*cellSize;
+            float playerCenterY = vMargin + (playerCell.row+0.5f)*cellSize;
 
             float dx = x - playerCenterX;
             float dy = y - playerCenterY;

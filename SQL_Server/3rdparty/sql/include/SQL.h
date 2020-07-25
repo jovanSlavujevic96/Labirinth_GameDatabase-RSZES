@@ -22,6 +22,7 @@ public:
     std::string sign_in(const std::string& player_username_mail, const std::string& player_password);
     std::string insert_new_player(const std::string& player_mail, const std::string& player_username, const std::string& player_password);
     std::string change_players_name(const std::string& player_mail, const std::string& player_password, const std::string& new_username);
+    std::string change_players_email(const std::string& player_mail, const std::string& player_password, const std::string& new_email);
     std::string change_players_password(const std::string& player_mail, const std::string& player_password, const std::string& new_password);
     std::string change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level);
     std::string getPlayerData(const std::string& player_username_mail); 

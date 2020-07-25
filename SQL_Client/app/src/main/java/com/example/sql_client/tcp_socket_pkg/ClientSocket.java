@@ -1,202 +1,205 @@
 package com.example.sql_client.tcp_socket_pkg;
 
-import android.content.Context;
+import com.example.sql_client.pop_up.ActivityInterface;
+import com.example.sql_client.pop_up.PopUpHandler;
+import com.example.sql_client.pop_up.ToastHandler;
+
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 import static android.content.Context.MODE_PRIVATE;
 
 public class ClientSocket
 {
-    static private Thread Thread1 = null;
-    static private Socket Socket = null;
-    static private PrintWriter printWriter = null;
+    static private volatile Socket Socket = null;
     static private BufferedReader bufferedReader = null;
+    static private PrintWriter printWriter = null;
+
     static private volatile String rcvMsg = null, sndMsg = null;
-    static final private String SRV_IP = "192.168.0.200";
+    static private Thread ConnectorTH = null, ReceiverHandlerTH = null;
+
+    static final private String SRV_IP = "192.168.0.200",
+            LDB_Command = "GET_LDB\n",
+            FILE_NAME = "leaderboard.xml";
     static final private int SRV_PORT = 8080;
-    static private volatile boolean connected = false, file_received = false;
-    public volatile boolean Exception_happened = false;
-    static final private String LDB_Command = "GET_LDB\n", FILE_NAME = "leaderboard.xml";
+    static private volatile boolean connected = false, bufferBoolean = true, file_received = false, file_transmitting = false;
 
-    public String getFileName()
-    {
-        return FILE_NAME;
-    }
+    static private ActivityInterface activityInterface = null;
+    static private volatile List<String> XmlLines = null;
 
-    public ClientSocket()
+    static public void setActivityInterface(ActivityInterface activityInterfaceToSet)
     {
-        if(null == Thread1)
-        {
-            Thread1 = new Thread(new Connector() );
-            Thread1.start();
+        activityInterface = activityInterfaceToSet;
+        if(null == ConnectorTH) {
+            ConnectorTH = new Thread(new Connector());
+            ConnectorTH.start();
+
+            XmlLines = new ArrayList<>();
         }
-        Exception_happened = false;
     }
 
-    public String TransmitString(String msgData)
+    static public void ConnectWithServer()
     {
-        if(false == connected || this.sndMsg != null )
+        ConnectorTH = new Thread(new Connector());
+        ConnectorTH.start();
+    }
+
+    static public String TransmitString(String msgData)
+    {
+        if(false == connected )
         {
-            Thread1 = new Thread(new Connector() );
-            Thread1.start();
+            ConnectorTH = new Thread(new Connector() );
+            ConnectorTH.start();
             return null;
         }
-        this.sndMsg = msgData;
-        new Thread(new StringTransmission() ).start();
-        while(null == this.rcvMsg);
-        final String tmp = this.rcvMsg;
-        this.rcvMsg = null;
-        this.sndMsg = null;
+
+        ClientSocket.bufferBoolean = false;
+        sndMsg = msgData;
+        rcvMsg = null;
+        new Thread(new Transmitter(false) ).start();
+        while(false == ClientSocket.bufferBoolean);
+        final String tmp = rcvMsg;
         return tmp;
     }
 
-    public boolean TransmitFile(String msgData, Context context)
+    static public boolean TransmitFile(String msgData)
     {
-        if(false == connected || this.sndMsg != null || !msgData.contentEquals(LDB_Command) )
+        if(false == connected  || !msgData.contentEquals(LDB_Command) )
         {
-            Thread1 = new Thread(new Connector() );
-            Thread1.start();
+            ConnectorTH = new Thread(new Connector() );
+            ConnectorTH.start();
             return false;
         }
-        this.file_received = false;
-        this.sndMsg = msgData;
-        new Thread(new FileTransmission(context) ).start();
-        while(false == this.file_received && false == this.Exception_happened);
-        this.sndMsg = null;
-        this.rcvMsg = null;
+
+        file_received = false;
+        file_transmitting = true;
+        sndMsg = msgData;
+        new Thread(new Transmitter(true) ).start();
+        while(false == file_received);
         return true;
     }
 
-    private class Connector implements Runnable
+    static private class Connector implements Runnable
     {
         @Override
         public void run()
         {
-            while(true)
+            int i=10;
+            while(i-- > 0)
             {
-                try
-                {
+                try{
                     Socket = new Socket(SRV_IP, SRV_PORT);
                     printWriter = new PrintWriter(Socket.getOutputStream() );
                     bufferedReader = new BufferedReader(new InputStreamReader(Socket.getInputStream() ));
                     connected = true;
                     sndMsg = null;
                     rcvMsg = null;
+                    ToastHandler.Notify(ClientSocket.activityInterface, "Connected to Server", true);
+                    ReceiverHandlerTH = new Thread(new ClientSocket.Receiver() );
+                    ReceiverHandlerTH.start();
+                    connected = true;
+                    break;
+                } catch (IOException e) {
+                    //PopUpHandler.PopUp(ClientSocket.activityInterface, -1,"Exception happened...", e.toString(), null);
+                    connected = false;
                     break;
                 }
-                catch (IOException e)
-                {
-                    connected = false;
-//                    Exception_happened = true;
-                    e.printStackTrace();
-                }
+            }
+            if(!connected || 0 == i) {
+                ToastHandler.Notify(ClientSocket.activityInterface, "There is no connection with Server", false);
             }
         }
     }
 
-    private class StringTransmission implements Runnable
+    static private class Receiver implements Runnable
     {
+        @Override
+        public void run() {
+            boolean list_cleared = false;
+            while(true)
+            {
+                try{
+                    ClientSocket.rcvMsg = bufferedReader.readLine();
+                    ClientSocket.bufferBoolean = true;
+                    if(null == ClientSocket.rcvMsg)
+                    {
+                        break;
+                    }
+                    if(file_transmitting)
+                    {
+                        if(!list_cleared){
+                            XmlLines.clear();
+                            list_cleared = true;
+                        }
+                        XmlLines.add(ClientSocket.rcvMsg + '\n');
+                        if(ClientSocket.rcvMsg.contains("</leaderboard>") ){
+                            list_cleared = false;
+                            file_transmitting = false;
+                        }
+                    }
+                }catch(IOException e){
+                    PopUpHandler.PopUp(ClientSocket.activityInterface, -1, "Exception happened...", e.toString(), null);
+                }
+            }
+            ToastHandler.Notify(ClientSocket.activityInterface, "Disconnected to Server", false);
+            ClientSocket.connected = false;
+        }
+
+    }
+
+    static private class Transmitter implements Runnable
+    {
+        private boolean sendFile;
+        public Transmitter(boolean sendFile)
+        {
+            this.sendFile = sendFile;
+        }
+
         @Override
         public void run()
         {
-            ClientSocket.this.rcvMsg = null;
-            printWriter.write(ClientSocket.this.sndMsg);
+            ClientSocket.bufferBoolean = false;
+            printWriter.write(ClientSocket.sndMsg);
             printWriter.flush();
-
-            ClientSocket.this.sndMsg = null;
-            while(null == ClientSocket.this.rcvMsg) {
-                try {
-                    ClientSocket.this.rcvMsg = bufferedReader.readLine();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    ClientSocket.this.connected = false;
-                    //Exception_happened = true;
-                }
-            }
-        }
-    }
-
-    private class FileTransmission implements Runnable
-    {
-        private Context context = null;
-        public FileTransmission(Context context)
-        {
-            this.context = context;
-        }
-
-        @Override
-        public void run()
-        {
-            ClientSocket.this.rcvMsg = null;
-            new Thread(new StringTransmission() ).start();
-            while(null == ClientSocket.this.rcvMsg );
-
-            List<String> list = new ArrayList<>();
-
-            if(ClientSocket.this.rcvMsg.contentEquals("UP_TO_DATE") )
+            if(!sendFile)
             {
-                ClientSocket.this.file_received = true;
                 return;
             }
-            list.add(ClientSocket.this.rcvMsg + '\n');
-
-            while (!ClientSocket.this.rcvMsg.contains("</leaderboard>"))
+            while(false == ClientSocket.bufferBoolean );
+            if(ClientSocket.rcvMsg.contentEquals("UP_TO_DATE") )
             {
-                try {
-                    ClientSocket.this.rcvMsg = bufferedReader.readLine();
-                    list.add(ClientSocket.this.rcvMsg + '\n');
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    ClientSocket.this.connected = false;
-                    ClientSocket.this.Exception_happened = true;
-                    return;
-                }
+                ClientSocket.file_received = true;
             }
-            FileOutputStream fos = null;
+            while(true == file_transmitting );
+
             try {
-                fos = context.openFileOutput(FILE_NAME, MODE_PRIVATE);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                ClientSocket.this.Exception_happened = true;
-                return;
-            }
-
-            for (int i = 0; i < list.size(); i++)
-            {
-                try {
-                    fos.write(list.get(i).getBytes() );
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    ClientSocket.this.Exception_happened = true;
-                    return;
-                }
-            }
-
-            if (fos != null)
-            {
-                try
+                FileOutputStream fos =  activityInterface.getApplicationContext().openFileOutput(FILE_NAME, MODE_PRIVATE);
+                for (int i = 0; i < XmlLines.size(); i++)
                 {
-                    fos.close();
+                    fos.write(XmlLines.get(i).getBytes() );
                 }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                    ClientSocket.this.Exception_happened = true;
-                    return;
-                }
+                fos.close();
+            } catch (Exception e) {
+                PopUpHandler.PopUp(ClientSocket.activityInterface, -1, "Exception happened...", e.toString(), null);
             }
-            ClientSocket.this.file_received = true;
+            ClientSocket.file_received = true;
         }
     }
 
+    static public String getFileName()
+    {
+        return FILE_NAME;
+    }
+
+    static public boolean isConnected()
+    {
+        return connected;
+    }
 
 }

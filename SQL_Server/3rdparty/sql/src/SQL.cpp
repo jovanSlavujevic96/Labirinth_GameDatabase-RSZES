@@ -75,6 +75,7 @@ public:
     SQL_enum_handler::checkRow_st check_password(const char* password, const char* typeOfData, const char* data);
     bool insert_new_player(const std::string& player_mail, const std::string& player_username, const std::string& player_password);
     bool change_players_name(const std::string& player_mail, const std::string& new_username);
+    bool change_players_email(const std::string& player_mail, const std::string& new_mail);
     bool change_players_password(const std::string& player_mail, const std::string& new_password);
     bool change_players_score(const std::string& player_mail, const uint16_t points, const uint8_t passed_level);
     std::vector<std::string> getPlayerData(const char* data, const char* typeOfData);
@@ -171,17 +172,17 @@ void SQL::SQL_impl::pingSQL(void)
 void SQL::SQL_impl::updateLeaderboard(bool& notify)
 {
     MYSQL_RES* res;
-    const char* command = "SELECT nickname, level, points FROM players ORDER BY points DESC LIMIT 3";
+    const char* command = "SELECT nickname, level, points FROM players ORDER BY points DESC LIMIT 10";
     int qstate = mysql_query(m_connector, command);
     if(qstate)
     {
-        std::cout << "\nSelection request has been failed\n";
+        //std::cout << "\nSelection request has been failed\n";
         return;
     }
     res = mysql_store_result(m_connector);
     if(NULL == res)
     {
-        std::cout << "\nStoring request has been failed\n";
+        //std::cout << "\nStoring request has been failed\n";
         return;
     }
     MYSQL_ROW row = mysql_fetch_row(res);
@@ -363,6 +364,22 @@ bool SQL::SQL_impl::change_players_name(const std::string& player_mail, const st
 {
     std::stringstream ss;
     ss << "UPDATE players set nickname = '" << new_username << "' where email = '" << player_mail << "'";
+    const auto query_st = ss.str(); //ss.str(""); ss.clear();
+    auto* query = query_st.c_str();
+    int qstate = mysql_query(m_connector, query);
+    if(qstate)
+    {
+        //std::cout << "\nRename request has been failed\n";
+        return false;
+    }
+    //std::cout << "\nPlayer succesfully renamed from: " << oldName << " to: " << player->getNickname() << '\n';
+    return true;
+}
+
+bool SQL::SQL_impl::change_players_email(const std::string& player_mail, const std::string& new_mail)
+{
+    std::stringstream ss;
+    ss << "UPDATE players set email = '" << new_mail << "' where email = '" << player_mail << "'";
     const auto query_st = ss.str(); //ss.str(""); ss.clear();
     auto* query = query_st.c_str();
     int qstate = mysql_query(m_connector, query);
@@ -571,6 +588,41 @@ std::string SQL::change_players_name(const std::string& player_mail, const std::
     }
 
     return (true == SQL_pimpl->change_players_name(player_mail, new_username)) ? ok : errSrv;
+}
+
+std::string SQL::change_players_email(const std::string& player_mail, const std::string& player_password, const std::string& new_email)
+{
+    //check does it exist already
+    auto check = SQL_pimpl->check_existance(player_mail.c_str(), "email" );
+    if(SQL_enum_handler::checkRow_st::Error == check)
+    {
+        return errSrv;
+    }
+    else if (SQL_enum_handler::checkRow_st::Free == check)
+    {
+        return errBMail;
+    }
+
+    check = SQL_pimpl->check_password(player_password.c_str(), "email", player_mail.c_str() );
+    if(SQL_enum_handler::checkRow_st::Error == check)
+    {
+        return errSrv;
+    }
+    else if(SQL_enum_handler::checkRow_st::Free == check)
+    {
+        return errBPass;
+    }
+
+    check = SQL_pimpl->check_existance(new_email.c_str(), "email" );
+    if(SQL_enum_handler::checkRow_st::Error == check)
+    {
+        return errSrv;
+    }
+    else if (SQL_enum_handler::checkRow_st::Free == check)
+    {
+        return errUMail;
+    }
+    return (true == SQL_pimpl->change_players_email(player_mail, new_email)) ? ok : errSrv;
 }
 
 std::string SQL::change_players_password(const std::string& player_mail, const std::string& player_password, const std::string& new_password)

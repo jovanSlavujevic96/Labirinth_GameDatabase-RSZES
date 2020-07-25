@@ -1,8 +1,5 @@
 package com.example.sql_client.tcp_socket_pkg.activites_pkg;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,19 +8,24 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.sql_client.MainActivity;
+import com.example.sql_client.pop_up.ActivityInterface;
 import com.example.sql_client.R;
 import com.example.sql_client.game_pkg.Player;
 import com.example.sql_client.game_pkg.activities_pkg.GameMenu;
+import com.example.sql_client.pop_up.PopUpHandler;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 
-public class SignUpActivity extends AppCompatActivity
+public class SignUpActivity extends ActivityInterface
 {
-    private Button signupButton;
+    private Button signUpButton;
     private EditText emailEditText, usernameEditText, passwordEditText;
     private TextView textView;
-    private static ClientSocket clientSocket = null;
-    private static AlertDialog.Builder dlgAlert = null;
-    private static Player player = null;
+
+    static private DialogInterface.OnClickListener Listener = null;
+
+    @Override
+    public void ActivityPopUpHandling(int PopUpType) { }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -31,32 +33,23 @@ public class SignUpActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
+        ClientSocket.setActivityInterface(this);
+        if(null == Listener) {
+            Listener =  new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    ClientSocket.ConnectWithServer();
+                    Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                    startActivity(intent);
+                }
+            };
+        }
+
         textView = findViewById(R.id.already_account);
-        signupButton = findViewById(R.id.signup);
+        signUpButton = findViewById(R.id.signup);
         emailEditText = findViewById(R.id.email);
         usernameEditText = findViewById(R.id.nickname);
         passwordEditText = findViewById(R.id.password);
-
-        if(null == clientSocket)
-        {
-            clientSocket = new ClientSocket();
-        }
-
-        if(null == dlgAlert && null == player)
-        {
-            player = new Player();
-
-            dlgAlert = new AlertDialog.Builder(this);
-            dlgAlert.setTitle("Error Message...");
-            dlgAlert.setPositiveButton("OK", null);
-            dlgAlert.setCancelable(true);
-            dlgAlert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                }
-            });
-        }
 
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,36 +60,41 @@ public class SignUpActivity extends AppCompatActivity
             }
         } );
 
-        signupButton.setOnClickListener(new View.OnClickListener() {
+        signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
-                final String email = emailEditText.getText().toString(),
-                nickname = usernameEditText.getText().toString(),
-                password = passwordEditText.getText().toString();
 
-                String msg = "SIGN_UP\n" + email + '\n' + nickname + '\n' + password;
-                msg = clientSocket.TransmitString(msg);
+                if(!ClientSocket.isConnected() )
+                {
+                    PopUpHandler.PopUp(ActivityInterface.current_context, -1, "Error Message...", "You can't sign in.\nYou are not connected to the server.\nWe are trying to reconnect.", Listener);
+                    return;
+                }
 
-                if(msg.contentEquals("ERR_USED_NAME"))
+                String msg = "SIGN_UP\n" + emailEditText.getText().toString() + '\n'
+                        + usernameEditText.getText().toString() + '\n'
+                        + passwordEditText.getText().toString();
+                msg = ClientSocket.TransmitString(msg);
+
+                if(msg.contentEquals("OK") )
                 {
-                    dlgAlert.setMessage("This name has already been used");
-                    dlgAlert.create().show();
-                }
-                else if(msg.contentEquals("ERR_USED_MAIL"))
-                {
-                    dlgAlert.setMessage("This email address has already been used");
-                    dlgAlert.create().show();
-                }
-                else if(msg.contentEquals("OK") )
-                {
-                    player.setOffline(false);
-                    player.setNickname(nickname);
-                    player.setEmail(email);
+                    Player.setOffline(false);
+                    Player.setNickname(usernameEditText.getText().toString() );
+                    Player.setEmail(emailEditText.getText().toString() );
 
                     Intent intent = new Intent(SignUpActivity.this, GameMenu.class);
                     startActivity(intent);
+                    return;
                 }
+
+                String Text = msg;
+                if(msg.contentEquals("ERR_USED_NAME")) {
+                    Text = "This name has already been used";
+                } else if(msg.contentEquals("ERR_USED_MAIL")){
+                    Text = "This email address has already been used";
+                }
+                PopUpHandler.PopUp(ActivityInterface.current_context, -1,
+                        "Error Message...", Text, null);
             }
         } );
     }
