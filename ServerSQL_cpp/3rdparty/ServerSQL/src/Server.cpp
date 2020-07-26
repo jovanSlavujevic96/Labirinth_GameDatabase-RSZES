@@ -1,5 +1,5 @@
-#include "../include/Server.h"
-#include "../../sql/include/SQL.h"
+#include "Server.h"
+#include "SQL.h"
 
 //C libs
 #include <unistd.h> 

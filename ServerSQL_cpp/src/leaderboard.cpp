@@ -1,8 +1,8 @@
 #include "leaderboard.h"
 #include "ui_leaderboard.h"
 
-#include "sql/include/SQL.h"
-#include "server/include/Server.h"
+#include "SQL.h"
+#include "Server.h"
 
 #include <atomic>
 #include <mutex>

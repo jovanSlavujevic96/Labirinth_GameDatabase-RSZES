@@ -10,7 +10,7 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
-#include "sql/include/IObserver.h"
+#include "IObserver.h"
 
 class Leaderboard :
     public QWidget,

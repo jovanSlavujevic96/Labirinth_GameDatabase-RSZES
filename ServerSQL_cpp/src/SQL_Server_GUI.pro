@@ -28,16 +28,14 @@ FORMS += \
     leaderboard.ui \
     widget.ui
 
-INCLUDEPATH += -I "../3rdparty"
+INCLUDEPATH += ../3rdparty/ServerSQL/include
+INCLUDEPATH += /usr/include/mysql
+INCLUDEPATH += /usr/include/mysql/mysql
 
-INCLUDEPATH += -I "/usr/include/mysql/"
-INCLUDEPATH += -I "/usr/include/mysql/mysql/"
+DEPENDPATH += . "../3rdparty/ServerSQL/include"
 
-DEPENDPATH += . "../3rdparty/server" "../3rdparty/sql"
-
-LIBS += -L../3rdparty/server/lib -lServer
-LIBS += -L../3rdparty/sql/lib -lSQL
-LIBS += -L`mysql_config --cflags --libs`
+LIBS += -L../3rdparty/ServerSQL/lib -lServerSQL
+LIBS += `mysql_config --cflags --libs`
 LIBS += -pthread
 LIBS += -ltinyxml
 

@@ -2,7 +2,7 @@
 #include "ui_widget.h"
 
 #include <string>
-#include "sql/include/SQL.h"
+#include "SQL.h"
 
 Widget::Widget(QWidget *parent)
   : QWidget(parent)

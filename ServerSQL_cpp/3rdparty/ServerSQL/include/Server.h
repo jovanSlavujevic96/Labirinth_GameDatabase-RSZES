@@ -2,7 +2,7 @@
 #define SERVER_H
 
 #include <memory>
-#include "../../sql/include/IObserver.h"
+#include "IObserver.h"
 
 class SQL;
 
