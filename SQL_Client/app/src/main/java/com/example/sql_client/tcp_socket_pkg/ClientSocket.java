@@ -1,5 +1,6 @@
 package com.example.sql_client.tcp_socket_pkg;
 
+import com.example.sql_client.game_pkg.Player;
 import com.example.sql_client.pop_up.ActivityInterface;
 import com.example.sql_client.pop_up.PopUpHandler;
 import com.example.sql_client.pop_up.ToastHandler;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ public class ClientSocket
             LDB_Command = "GET_LDB\n",
             FILE_NAME = "leaderboard.xml";
     static final private int SRV_PORT = 8080;
-    static private volatile boolean connected = false, bufferBoolean = true, file_received = false, file_transmitting = false;
+    static private volatile boolean connected = false, bufferBoolean = true, file_received = false, file_transmitting = false, Exception_happened = false, up_to_date = false;
 
     static private ActivityInterface activityInterface = null;
     static private volatile List<String> XmlLines = null;
@@ -48,14 +50,27 @@ public class ClientSocket
     {
         ConnectorTH = new Thread(new Connector());
         ConnectorTH.start();
+        Player.resetPlayersInfO();
+    }
+
+    static public void DisconnectWithServer()
+    {
+        try{
+            Socket.shutdownInput();
+            Socket.close();
+            connected = false;
+        }catch (SocketException e) {
+            PopUpHandler.PopUp(activityInterface, -1, "Warning...", "Client disconnected with server", null);
+        }catch (Exception e){
+            PopUpHandler.PopUp(activityInterface, -1, "Exception happened...", e.toString(), null);
+        }
     }
 
     static public String TransmitString(String msgData)
     {
         if(false == connected )
         {
-            ConnectorTH = new Thread(new Connector() );
-            ConnectorTH.start();
+            PopUpHandler.PopUp(activityInterface, -1, "Error...", "You are not connected!", null);
             return null;
         }
 
@@ -64,16 +79,14 @@ public class ClientSocket
         rcvMsg = null;
         new Thread(new Transmitter(false) ).start();
         while(false == ClientSocket.bufferBoolean);
-        final String tmp = rcvMsg;
-        return tmp;
+        return rcvMsg;
     }
 
     static public boolean TransmitFile(String msgData)
     {
         if(false == connected  || !msgData.contentEquals(LDB_Command) )
         {
-            ConnectorTH = new Thread(new Connector() );
-            ConnectorTH.start();
+            PopUpHandler.PopUp(activityInterface, -1, "Error...", "You are not connected!", null);
             return false;
         }
 
@@ -81,7 +94,13 @@ public class ClientSocket
         file_transmitting = true;
         sndMsg = msgData;
         new Thread(new Transmitter(true) ).start();
-        while(false == file_received);
+        while(false == file_received && false == ClientSocket.Exception_happened);
+        if(ClientSocket.Exception_happened)
+        {
+            PopUpHandler.PopUp(activityInterface, -1, "Error Message Received...", ClientSocket.rcvMsg, null);
+            rcvMsg = null;
+            return false;
+        }
         return true;
     }
 
@@ -144,11 +163,14 @@ public class ClientSocket
                         }
                     }
                 }catch(IOException e){
-                    PopUpHandler.PopUp(ClientSocket.activityInterface, -1, "Exception happened...", e.toString(), null);
+                    //PopUpHandler.PopUp(ClientSocket.activityInterface, -1, "Exception happened...", e.toString(), null);
+                    //catching those exception on the other side
+                    break;
                 }
             }
             ToastHandler.Notify(ClientSocket.activityInterface, "Disconnected to Server", false);
             ClientSocket.connected = false;
+            Player.resetPlayersInfO();
         }
 
     }
@@ -174,8 +196,15 @@ public class ClientSocket
             while(false == ClientSocket.bufferBoolean );
             if(ClientSocket.rcvMsg.contentEquals("UP_TO_DATE") )
             {
+                ClientSocket.up_to_date = true;
                 ClientSocket.file_received = true;
+                return;
+            }else if(ClientSocket.rcvMsg.contains("ERR")){
+                ClientSocket.Exception_happened = true;
+                ClientSocket.up_to_date = false;
+                return;
             }
+            ClientSocket.up_to_date = false;
             while(true == file_transmitting );
 
             try {
@@ -200,6 +229,11 @@ public class ClientSocket
     static public boolean isConnected()
     {
         return connected;
+    }
+
+    static public boolean isUpToDate()
+    {
+        return up_to_date;
     }
 
 }

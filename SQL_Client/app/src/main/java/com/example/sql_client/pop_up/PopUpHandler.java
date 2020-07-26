@@ -22,7 +22,9 @@ public class PopUpHandler {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run(){
-                activity.ActivityPopUpHandling(PopUpType);
+                if(PopUpType != -1) {
+                    activity.ActivityPopUpHandling(PopUpType);
+                }
                 dlgAlert.setTitle(Title);
                 dlgAlert.setMessage(Text);
                 dlgAlert.create().show();

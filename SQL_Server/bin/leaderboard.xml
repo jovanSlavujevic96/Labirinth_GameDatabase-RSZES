@@ -1,7 +1,9 @@
 <?xml version="1.0" ?>
 <leaderboard>
-    <player points="306" name="vujsla" level="2" />
+    <player points="592" name="vujsla" level="5" />
     <player points="253" name="stefan" level="2" />
-    <player points="0" name="marko" level="0" />
+    <player points="118" name="marko" level="1" />
+    <player points="88" name="neko" level="1" />
     <player points="0" name="mikica" level="0" />
+    <player points="0" name="vujadin96" level="0" />
 </leaderboard>

@@ -29,9 +29,6 @@ public class GameMenu extends ActivityInterface {
     private ImageView userConfiguration;
 
     @Override
-    public void ActivityPopUpHandling(int PopUpType) {}
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_menu);

@@ -25,9 +25,6 @@ public class SignUpActivity extends ActivityInterface
     static private DialogInterface.OnClickListener Listener = null;
 
     @Override
-    public void ActivityPopUpHandling(int PopUpType) { }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);

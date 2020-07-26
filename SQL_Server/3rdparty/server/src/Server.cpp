@@ -126,9 +126,10 @@ class Server::Socket
 {
     int16_t m_socketValue;
     std::thread m_worker;
-    bool m_upToDate;
+    volatile std::atomic<bool> m_upToDate;
     Server::ServerImpl* m_server;
 
+    void InnerUpdateHandler(const std::string& sendingMsg, const std::string& command);
     void clientCommunication();
 
 public:
@@ -268,7 +269,7 @@ void Server::ServerImpl::Update(const Data& notification)
         inFile.close();
     }
 
-    for(const auto& socket : m_sockets)
+    for(auto& socket : m_sockets)
     {
         socket->doUpdate();
     }
@@ -303,7 +304,6 @@ std::string Server::ServerImpl::chooseSQLaction(const std::vector<std::string>& 
     }
     else if(parameters[0] == "CHANGE_NAME" && parameters.size() >= 4 && signed_up)
     {
-        std::cout << "parameters: " << parameters[1] << ' ' << parameters[2] << ' ' << parameters[3] << '\n';
         return m_sqlPtr->change_players_name(parameters[1], parameters[2], parameters[3]);
     }
     else if(parameters[0] == "GET_INFO" && parameters.size() >= 2 && signed_up)
@@ -343,6 +343,18 @@ const std::vector<std::string>& Server::ServerImpl::getFileContent() const
 /*
  * class Socket PRIVATE METHODS definition
  */
+void Server::Socket::InnerUpdateHandler(const std::string& sendingMsg, const std::string& command)
+{
+    if(sendingMsg != "OK\n")
+    {
+        return;
+    }
+    if(command == "CHANGE_NAME" || command == "UPDATE_SCORE")
+    {
+        m_upToDate = false;
+    }
+}
+
 void Server::Socket::clientCommunication()
 {
     char buffer[BUFFER_SIZE] = {0};
@@ -356,7 +368,7 @@ void Server::Socket::clientCommunication()
 			break;
 		}        
         auto params = helper_func::parseString(buffer);
-        std::cout << "Server::Socket::clientCommunication :: socket(" << m_socketValue << ") => params[0]: " << params[0] << '\n';
+        std::cout << "Server::Socket::clientCommunication :: socket(" << m_socketValue << ") sends " << params[0] << '\n';
         helper_func::clearBuffer(buffer);
 
         if("GET_LDB" == params[0] && signed_up )  //send leaderboard via XML file
@@ -364,7 +376,7 @@ void Server::Socket::clientCommunication()
             if(true == m_upToDate)
             {
                 msg = "UP_TO_DATE\n";
-                std::cout << "sent: " << msg;
+                std::cout << "Server::Socket::clientCommunication :: socket(" << m_socketValue << ") receives " << msg;
                 if( send(m_socketValue, msg.c_str(), msg.length(), 0) <= 0)
                 {
                     break;
@@ -376,7 +388,6 @@ void Server::Socket::clientCommunication()
 
             for(const auto& file_buff : m_server->getFileContent() ) 
             {
-                std::cout << file_buff;
                 if( send(m_socketValue, file_buff.c_str(), file_buff.length(), 0) <= 0)
                 {
                     break;
@@ -388,10 +399,12 @@ void Server::Socket::clientCommunication()
             continue;    
         }
         msg = m_server->chooseSQLaction(params, signed_up) + '\n';
+        Socket::InnerUpdateHandler(msg, params[0]);
         if( send(m_socketValue, msg.c_str(), msg.length(), 0) <= 0)
         {
             break;
         }
+        std::cout << "Server::Socket::clientCommunication :: socket(" << m_socketValue << ") receives " << msg;
     }
     Server_MThandler::index = m_server->getSocketIndexVal(this);
     Server_MThandler::condition_var.notify_one();

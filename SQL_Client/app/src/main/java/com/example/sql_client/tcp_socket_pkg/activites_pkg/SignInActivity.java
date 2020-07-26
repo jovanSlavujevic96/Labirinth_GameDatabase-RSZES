@@ -28,9 +28,6 @@ public class SignInActivity extends ActivityInterface
     static private DialogInterface.OnClickListener Listener = null;
 
     @Override
-    public void ActivityPopUpHandling(int PopUpType) { }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
@@ -42,7 +39,6 @@ public class SignInActivity extends ActivityInterface
             Listener =  new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    ClientSocket.ConnectWithServer();
                     Intent intent = new Intent(SignInActivity.this, MainActivity.class);
                     startActivity(intent);
                 }

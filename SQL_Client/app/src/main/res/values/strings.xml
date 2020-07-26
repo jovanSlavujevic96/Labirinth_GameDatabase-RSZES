@@ -25,4 +25,7 @@
     <string name="load">LOAD</string>
     <string name="leaderboard">LEADERBOARD</string>
     <string name="settings">Settings</string>
+    <string name="go_to_game_menu">GO TO GAME MENU</string>
+    <string name="todo">TODO</string>
+    <string name="todo_">TODO</string>
 </resources>

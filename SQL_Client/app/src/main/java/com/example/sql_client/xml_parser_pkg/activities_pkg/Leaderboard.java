@@ -7,6 +7,8 @@ import android.widget.TextView;
 import com.example.sql_client.pop_up.ActivityInterface;
 import com.example.sql_client.R;
 import com.example.sql_client.game_pkg.GameView;
+import com.example.sql_client.pop_up.PopUpHandler;
+import com.example.sql_client.pop_up.ToastHandler;
 import com.example.sql_client.tcp_socket_pkg.ClientSocket;
 import com.example.sql_client.xml_parser_pkg.XMLParser;
 
@@ -21,9 +23,6 @@ public class Leaderboard extends ActivityInterface
     static private  XMLParser xmlParser = null;
     static private ClientSocket clientSocket = null;
     static private List<TextView> textViewList = null;
-
-    @Override
-    public void ActivityPopUpHandling(int PopUpType) {}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +47,16 @@ public class Leaderboard extends ActivityInterface
     }
 
     public void load (View v){
-        if(!firstLoad) if(ClientSocket.TransmitFile("GET_LDB\n" ) );
+        if(!firstLoad) {
+            if (!ClientSocket.TransmitFile("GET_LDB\n")) {
+                return;
+            }
+            if(ClientSocket.isUpToDate() ){
+                return;
+            }
+        }
 
-        if(true == xmlParser.DoParsing(getApplicationContext(), clientSocket.getFileName() ) )
+        if(true == xmlParser.DoParsing(this, clientSocket.getFileName() ) )
         {
             List<StringBuilder> sbList = new ArrayList<>(3);
             for(int i=0; i<3; i++) {
@@ -66,6 +72,9 @@ public class Leaderboard extends ActivityInterface
             {
                 textViewList.get(i).setText(sbList.get(i).toString());
             }
+        }
+        else{
+            return;
         }
         firstLoad = false;
     }

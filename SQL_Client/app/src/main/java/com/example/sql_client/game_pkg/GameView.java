@@ -27,7 +27,7 @@ public class GameView extends View
     private Cell[][] cells;
     volatile private Cell playerCell = null, exitCell = null;
 
-    static private final int COLS = 7, ROWS = 10, TMAX = (int)(0.5*60)/*sec*/, TMIN =(int)(0.25*60) /*sec*/, LEVEL_MAX = 5;
+    static private final int COLS = 7, ROWS = 10, TMAX = (int)(3*60)/*sec*/, TMIN =(int)(0.75*60) /*sec*/, LEVEL_MAX = 5;
     private static final float WALL_THICKNESS = 4.0f;
 
     private float cellSize, hMargin, vMargin;
@@ -289,8 +289,8 @@ public class GameView extends View
             if(level < LEVEL_MAX) {
                 includePlayer = true;
             }
-            final float timePerc = (float)(TMAX-gameActivity.getSecondsFromDurationString() ) / (float)(TMAX-TMIN);
-            final int points = (int)(timePerc*(float)(level*100));
+            final float timePerc = (float)(TMAX*level/5-gameActivity.getSecondsFromDurationString() ) / (float)(TMAX*level/5-TMIN*level/5);
+            final int points = (int)(timePerc*(float)(5*level/5*100));
             Player.setRecord(level, points);
 
             int incr=1;

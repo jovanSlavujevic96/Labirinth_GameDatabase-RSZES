@@ -1,15 +1,16 @@
 package com.example.sql_client.xml_parser_pkg;
 
-import android.content.Context;
+import com.example.sql_client.pop_up.ActivityInterface;
+import com.example.sql_client.pop_up.PopUpHandler;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,32 +48,26 @@ public class XMLParser
         }
     }
 
-    public boolean DoParsing(Context context, String fileName)
-    {
-        if(null == context || null == fileName)
-        {
+    public boolean DoParsing(ActivityInterface activityInterface, String fileName) {
+        if (null == activityInterface || null == fileName) {
             return false;
         }
-        FileInputStream fileInputStream = null;
-        try {
-            fileInputStream = context.openFileInput(fileName);
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        }
-        InputStream inputStream = new BufferedInputStream(fileInputStream);
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db = null;
+        InputStream inputStream = null;
         Document document = null;
-        try{
-            db = factory.newDocumentBuilder();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        try{
+        try {
+            FileInputStream fileInputStream = activityInterface.getApplicationContext().openFileInput(fileName);
+            inputStream = new BufferedInputStream(fileInputStream);
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = factory.newDocumentBuilder();
             document = db.parse(inputStream);
+        }catch (SAXParseException e){
+            PopUpHandler.PopUp(activityInterface, -1, "Exception happened...", e.toString(), null);
+            return false;
         }catch (Exception e){
-            e.printStackTrace();
+            PopUpHandler.PopUp(activityInterface, -1, "Exception happened...", e.toString(), null);
+            return false;
         }
+
         document.getDocumentElement().normalize();
         NodeList nList = document.getElementsByTagName("player");
 

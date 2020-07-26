@@ -35,9 +35,6 @@ public class UserSettingsActivity extends ActivityInterface {
     static private DialogInterface.OnClickListener Listener = null;
 
     @Override
-    public void ActivityPopUpHandling(int PopUpType) { }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_settings);
@@ -48,7 +45,17 @@ public class UserSettingsActivity extends ActivityInterface {
             Listener =  new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    ClientSocket.ConnectWithServer();
+                    String msg = "GET_INFO\n" + Player.getEmail();
+                    msg = ClientSocket.TransmitString(msg);
+                    if(msg.contains("ERR")){
+                        msg = "GET_INFO\n" + Player.getNickname();
+                        msg = ClientSocket.TransmitString(msg);
+                    }
+                    String[] infos = msg.split(";");
+                    Player.setEmail(infos[0]);
+                    Player.setNickname(infos[1]);
+                    Player.setRecord(Integer.parseInt(infos[3]), Integer.parseInt(infos[2]) );
+
                     Intent intent = new Intent(UserSettingsActivity.this, UserSettingsActivity.class);
                     startActivity(intent);
                 }
@@ -125,11 +132,11 @@ public class UserSettingsActivity extends ActivityInterface {
                         return;
                     }
 
-                    String msg = "CHANGE_EMAIL\n" + Player.getEmail() + '\n' + editTextList.get(2).getText().toString() + '\n' + editTextList.get(1).getText().toString();
+                    String msg = "CHANGE_MAIL\n" + Player.getEmail() + '\n' + editTextList.get(2).getText().toString() + '\n' + editTextList.get(1).getText().toString();
                     msg = ClientSocket.TransmitString(msg);
                     if (msg.equals("OK")){
                         ToastHandler.Notify(ActivityInterface.current_context, "Successfully changed email!", true);
-                        Player.setNickname(editTextList.get(0).getText().toString());
+                        Player.setEmail(editTextList.get(1).getText().toString());
                         Intent intent = new Intent(UserSettingsActivity.this, GameMenu.class);
                         startActivity(intent);
                         return;
@@ -160,7 +167,6 @@ public class UserSettingsActivity extends ActivityInterface {
                     msg = ClientSocket.TransmitString(msg);
                     if (msg.equals("OK")){
                         ToastHandler.Notify(ActivityInterface.current_context, "Successfully changed password!", true);
-                        Player.setNickname(editTextList.get(0).getText().toString());
                         Intent intent = new Intent(UserSettingsActivity.this, GameMenu.class);
                         startActivity(intent);
                         return;

@@ -18,11 +18,8 @@ import com.example.sql_client.tcp_socket_pkg.activites_pkg.SignUpActivity;
 public class MainActivity extends ActivityInterface
 {
     private TextView signIn;
-    private Button signUp, playOffline;
-    private ImageButton connectToSRV;
-
-    @Override
-    public void ActivityPopUpHandling(int PopUpType) { }
+    private Button signUp, goToGameMenu;
+    private ImageButton connectToSRV, signOut;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -34,8 +31,9 @@ public class MainActivity extends ActivityInterface
 
         signIn = findViewById(R.id.sigin);
         signUp = findViewById(R.id.signup);
-        playOffline = findViewById(R.id.play_offline);
+        goToGameMenu = findViewById(R.id.play_offline);
         connectToSRV = findViewById(R.id.reconnectSRV);
+        signOut = findViewById(R.id.signOutBtn);
 
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,11 +71,13 @@ public class MainActivity extends ActivityInterface
             }
         } );
 
-        playOffline.setOnClickListener(new View.OnClickListener() {
+        goToGameMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
-                Player.setOffline(true);
+                if(! (ClientSocket.isConnected() && !Player.getOffline() ) ){
+                    Player.setOffline(true);
+                }
                 Intent intent = new Intent(MainActivity.this, GameMenu.class);
                 startActivity(intent);
             }
@@ -89,7 +89,29 @@ public class MainActivity extends ActivityInterface
                 if(!ClientSocket.isConnected() )
                 {
                     ClientSocket.ConnectWithServer();
+                    if(ClientSocket.isConnected() && !Player.getOffline() )
+                    {
+                        Player.resetPlayersInfO();
+                    }
+                    return;
                 }
+                PopUpHandler.PopUp(ActivityInterface.current_context, -1, "Error...", "You are already connected to the server", null);
+            }
+        } );
+
+        signOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(ClientSocket.isConnected() )
+                {
+                    ClientSocket.DisconnectWithServer();
+                    if(!ClientSocket.isConnected() && !Player.getOffline() )
+                    {
+                        Player.resetPlayersInfO();
+                    }
+                    return;
+                }
+                PopUpHandler.PopUp(ActivityInterface.current_context, -1, "Error...", "You are already signed out/disconnected", null);
             }
         } );
 

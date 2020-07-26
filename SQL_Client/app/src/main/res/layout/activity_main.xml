@@ -11,7 +11,7 @@
         android:id="@+id/play_offline"
         android:layout_width="285dp"
         android:layout_height="44dp"
-        android:text="@string/play_offline"
+        android:text="@string/go_to_game_menu"
         app:layout_constraintBottom_toBottomOf="@+id/gifImageView"
         app:layout_constraintEnd_toEndOf="@+id/gifImageView"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -70,7 +70,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/gifImageView"
         app:layout_constraintVertical_bias="0.201"
-        app:srcCompat="@android:drawable/stat_notify_sync" />
+        app:srcCompat="@android:drawable/stat_notify_sync"
+        android:contentDescription="@string/todo" />
+
+    <ImageButton
+        android:id="@+id/signOutBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="112dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_lock_power_off"
+        android:contentDescription="@string/todo" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

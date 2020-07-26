@@ -87,4 +87,14 @@ public class Player
         return m_TmpPoints;
     }
 
+    static public void resetPlayersInfO()
+    {
+        resetTmpScore();
+        m_HighestLevel = 0;
+        m_HighestPoints = 0;
+        m_Email = null;
+        m_Nickname = null;
+        m_offline = true;
+    }
+
 }

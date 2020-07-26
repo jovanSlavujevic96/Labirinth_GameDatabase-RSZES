@@ -2,9 +2,12 @@ package com.example.sql_client.pop_up;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-abstract public class ActivityInterface extends AppCompatActivity
+public class ActivityInterface extends AppCompatActivity
 {
-    abstract public void ActivityPopUpHandling(int PopUpType);
+    public void ActivityPopUpHandling(int PopUpType)
+    {
+
+    }
 
     static protected ActivityInterface current_context = null;
 
