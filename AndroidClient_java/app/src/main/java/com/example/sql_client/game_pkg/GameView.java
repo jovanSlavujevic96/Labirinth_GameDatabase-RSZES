@@ -16,6 +16,7 @@ import com.example.sql_client.pop_up.PopUpHandler;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
+import java.util.HashMap;
 
 public class GameView extends View
 {
@@ -36,6 +37,8 @@ public class GameView extends View
 
     private GameActivity gameActivity = null;
     private Thread TimeElpaseTH = null;
+
+    private HashMap levelSecondsMap;
 
     public GameView(Context context, @Nullable AttributeSet attrs )
     {
@@ -130,6 +133,8 @@ public class GameView extends View
         {
             TimeElpaseTH = new Thread(new TimeElapse() );
             TimeElpaseTH.start();
+            levelSecondsMap = new HashMap<Integer, Integer>();
+            levelSecondsMap.put(0, 0);
         }
 
         Stack<Cell> stack = new Stack<>();
@@ -276,7 +281,6 @@ public class GameView extends View
         invalidate();
 
     }
-
     private void checkExit()
     {
         if(null == playerCell)
@@ -284,15 +288,24 @@ public class GameView extends View
             return;
         }
         if (playerCell == exitCell) {
+            final Integer passedTime = gameActivity.getSecondsFromDurationString();
             boolean includePlayer = false;
             final int level = Player.getTmpLevel()+1;
             if(level < LEVEL_MAX) {
                 includePlayer = true;
             }
-            final float timePerc = (float)(TMAX*level/5-gameActivity.getSecondsFromDurationString() ) / (float)(TMAX*level/5-TMIN*level/5);
-            final int points = (int)(timePerc*(float)(5*level/5*100));
-            Player.setRecord(level, points);
+            final int timeDelta = passedTime - (int)levelSecondsMap.get(Player.getTmpLevel() );
+            final float timePerc = (float)(TMAX- timeDelta) / (float)(TMAX-TMIN);
+            int points = (int)(timePerc*100);
 
+            if(points > 100) {
+                points = 100 + (points - 100)/5;
+            }else if(points < 0) {
+                points = 0;
+            }
+            Player.setRecord(level, Player.getTmpPoints()+points );
+
+            levelSecondsMap.put(level, passedTime);
             int incr=1;
             if(!includePlayer){
                 incr=0;
@@ -376,3 +389,4 @@ public class GameView extends View
         }
     }
 }
+
